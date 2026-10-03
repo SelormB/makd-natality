@@ -1,0 +1,9 @@
+data/raw/*.zip
+data/raw/*.txt
+!data/raw/PROVENANCE.txt
+data/processed/*.parquet
+data/processed/models/
+data/wonder/*.txt
+__pycache__/
+*.part
+.env

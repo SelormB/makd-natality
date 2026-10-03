@@ -1,0 +1,135 @@
+MAKD-Natality QA report  [DRAFT]
+========================================================================
+
+1. Layout sanity: parsed values inside documented ranges
+  2016: PASS
+  2017: PASS
+  2018: PASS
+  2019: PASS
+  2020: PASS
+  2021: PASS
+  2022: PASS
+  2023: PASS
+  2024: PASS
+
+2. Cohort flow (rows remaining after each step)
+  year          parsed       singleton     us_resident   outcome_known   gest_in_range
+  2016          60,000          58,128          57,936          57,862          57,862
+  2017          60,000          58,054          57,892          57,841          57,841
+  2018          60,000          58,102          57,927          57,880          57,880
+  2019          60,000          58,121          57,932          57,878          57,878
+  2020          60,000          58,133          57,966          57,913          57,913
+  2021          60,000          58,129          57,967          57,910          57,910
+  2022          60,000          58,108          57,930          57,873          57,873
+  2023          60,000          58,004          57,835          57,778          57,778
+  2024          60,000          58,070          57,902          57,847          57,847
+
+3. Outcome rates in cohort (singletons) and parsed totals vs NVSR reference
+  2016: LBW 7.67%  PTB 9.52%  NVSR reference not filled [VERIFY: V2]
+  2017: LBW 7.86%  PTB 9.71%  NVSR reference not filled [VERIFY: V2]
+  2018: LBW 7.66%  PTB 9.66%  NVSR reference not filled [VERIFY: V2]
+  2019: LBW 7.75%  PTB 9.80%  NVSR reference not filled [VERIFY: V2]
+  2020: LBW 7.78%  PTB 9.62%  NVSR reference not filled [VERIFY: V2]
+  2021: LBW 7.94%  PTB 9.75%  NVSR reference not filled [VERIFY: V2]
+  2022: LBW 7.71%  PTB 9.57%  NVSR reference not filled [VERIFY: V2]
+  2023: LBW 7.91%  PTB 9.84%  NVSR reference not filled [VERIFY: V2]
+  2024: LBW 7.85%  PTB 9.75%  NVSR reference not filled [VERIFY: V2]
+
+4. Item missingness in the national file (raw fields, all records)
+  year   PRECARE       BMI       WIC     CIG_0     MEDUC   PAY_REC    PREVIS  FAGECOMB
+  2016     3.75%     5.05%     1.71%     0.66%     2.72%     0.55%     0.00%    18.42%
+  2017     3.72%     5.14%     1.78%     0.63%     2.68%     0.61%     0.00%    18.57%
+  2018     3.76%     5.09%     1.74%     0.67%     2.68%     0.58%     0.00%    18.58%
+  2019     3.71%     5.10%     1.86%     0.72%     2.76%     0.59%     0.00%    18.30%
+  2020     3.67%     5.17%     1.83%     0.72%     2.65%     0.55%     0.00%    18.35%
+  2021     3.77%     5.14%     1.76%     0.63%     2.56%     0.59%     0.00%    17.95%
+  2022     3.59%     5.21%     1.91%     0.65%     2.89%     0.58%     0.00%    18.48%
+  2023     3.62%     5.04%     1.75%     0.73%     2.71%     0.56%     0.00%    18.45%
+  2024     3.82%     5.11%     1.83%     0.62%     2.72%     0.62%     0.00%    18.30%
+
+5. WONDER state-level unknown rates
+  bmi: states/year 51-51; rate median 2.51%, max 57.86%; 'Not Available' births 0; suppressed unknown cells 40 (set to 5)
+  cig: states/year 51-51; rate median 0.43%, max 4.65%; 'Not Available' births 15; suppressed unknown cells 320 (set to 5)
+  meduc: states/year 51-51; rate median 1.82%, max 19.93%; 'Not Available' births 0; suppressed unknown cells 110 (set to 5)
+  pay: states/year 51-51; rate median 0.43%, max 2.88%; 'Not Available' births 0; suppressed unknown cells 325 (set to 5)
+  precare: states/year 51-51; rate median 1.88%, max 25.98%; 'Not Available' births 0; suppressed unknown cells 81 (set to 5)
+  wic: states/year 51-51; rate median 0.92%, max 21.43%; 'Not Available' births 0; suppressed unknown cells 201 (set to 5)
+
+  Reconciliation: births-weighted WONDER rate vs national-file raw rate
+  (differences beyond ~0.5 points suggest a layout or export problem)
+    bmi     2016: WONDER   5.04%  file   5.05%
+    bmi     2017: WONDER   5.12%  file   5.14%
+    bmi     2018: WONDER   5.07%  file   5.09%
+    bmi     2019: WONDER   5.08%  file   5.10%
+    bmi     2020: WONDER   5.15%  file   5.17%
+    bmi     2021: WONDER   5.10%  file   5.14%
+    bmi     2022: WONDER   5.21%  file   5.21%
+    bmi     2023: WONDER   5.03%  file   5.04%
+    bmi     2024: WONDER   5.11%  file   5.11%
+    cig     2016: WONDER   0.68%  file   0.66%
+    cig     2017: WONDER   0.69%  file   0.63%
+    cig     2018: WONDER   0.71%  file   0.67%
+    cig     2019: WONDER   0.78%  file   0.72%
+    cig     2020: WONDER   0.78%  file   0.72%
+    cig     2021: WONDER   0.67%  file   0.63%
+    cig     2022: WONDER   0.74%  file   0.65%
+    cig     2023: WONDER   0.82%  file   0.73%
+    cig     2024: WONDER   0.68%  file   0.62%
+    meduc   2016: WONDER   2.74%  file   2.72%
+    meduc   2017: WONDER   2.67%  file   2.68%
+    meduc   2018: WONDER   2.69%  file   2.68%
+    meduc   2019: WONDER   2.76%  file   2.76%
+    meduc   2020: WONDER   2.65%  file   2.65%
+    meduc   2021: WONDER   2.56%  file   2.56%
+    meduc   2022: WONDER   2.88%  file   2.89%
+    meduc   2023: WONDER   2.70%  file   2.71%
+    meduc   2024: WONDER   2.72%  file   2.72%
+    pay     2016: WONDER   0.60%  file   0.55%
+    pay     2017: WONDER   0.64%  file   0.61%
+    pay     2018: WONDER   0.57%  file   0.58%
+    pay     2019: WONDER   0.61%  file   0.59%
+    pay     2020: WONDER   0.62%  file   0.55%
+    pay     2021: WONDER   0.63%  file   0.59%
+    pay     2022: WONDER   0.64%  file   0.58%
+    pay     2023: WONDER   0.62%  file   0.56%
+    pay     2024: WONDER   0.69%  file   0.62%
+    precare 2016: WONDER   3.72%  file   3.75%
+    precare 2017: WONDER   3.68%  file   3.72%
+    precare 2018: WONDER   3.75%  file   3.76%
+    precare 2019: WONDER   3.70%  file   3.71%
+    precare 2020: WONDER   3.67%  file   3.67%
+    precare 2021: WONDER   3.75%  file   3.77%
+    precare 2022: WONDER   3.59%  file   3.59%
+    precare 2023: WONDER   3.61%  file   3.62%
+    precare 2024: WONDER   3.79%  file   3.82%
+    wic     2016: WONDER   1.70%  file   1.71%
+    wic     2017: WONDER   1.78%  file   1.78%
+    wic     2018: WONDER   1.75%  file   1.74%
+    wic     2019: WONDER   1.84%  file   1.86%
+    wic     2020: WONDER   1.79%  file   1.83%
+    wic     2021: WONDER   1.75%  file   1.76%
+    wic     2022: WONDER   1.92%  file   1.91%
+    wic     2023: WONDER   1.75%  file   1.75%
+    wic     2024: WONDER   1.82%  file   1.83%
+
+6. Named spot checks for the author (verify by hand in WONDER)
+    bmi     2024 lowest : Massachusetts                5 /     1,228 = 0.41%
+    bmi     2024 median : North Dakota                29 /     1,115 = 2.60%
+    bmi     2024 highest: Minnesota                  633 /     1,136 = 55.72%
+    cig     2024 lowest : Alaska                       0 /     1,200 = 0.00%
+    cig     2024 median : Arizona                      5 /     1,173 = 0.43%
+    cig     2024 highest: Vermont                     42 /     1,142 = 3.68%
+    meduc   2024 lowest : Florida                      5 /     1,215 = 0.41%
+    meduc   2024 median : Connecticut                 24 /     1,188 = 2.02%
+    meduc   2024 highest: Oregon                     223 /     1,216 = 18.34%
+    pay     2024 lowest : Louisiana                    0 /     1,123 = 0.00%
+    pay     2024 median : Maryland                     5 /     1,160 = 0.43%
+    pay     2024 highest: Oregon                      33 /     1,216 = 2.71%
+    precare 2024 lowest : South Carolina               5 /     1,227 = 0.41%
+    precare 2024 median : Maine                       22 /     1,173 = 1.88%
+    precare 2024 highest: Wyoming                    311 /     1,200 = 25.92%
+    wic     2024 lowest : Rhode Island                 0 /     1,183 = 0.00%
+    wic     2024 median : Florida                     12 /     1,215 = 0.99%
+    wic     2024 highest: Arizona                    244 /     1,173 = 20.80%
+
+Checks flagged: 0

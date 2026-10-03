@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "MAKD-Natality: missingness-aware knowledge distillation for low birthweight and preterm birth prediction"
+version: "0.1.0"
+date-released: "[date: release day]"
+authors:
+  - family-names: "Buaka"
+    given-names: "Selorm"
+    affiliation: "University of Northern Colorado"
+    orcid: "https://orcid.org/[VERIFY: ORCID iD]"
+license: MIT
+repository-code: "[repository URL]"
+doi: "[DOI: Zenodo, after release]"
+keywords:
+  - knowledge distillation
+  - missing data
+  - birth certificates
+  - low birthweight
+  - preterm birth
+  - clinical prediction

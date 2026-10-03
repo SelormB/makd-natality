@@ -1,0 +1,130 @@
+# MAKD-Natality configuration. Every modeling decision lives here, not in code.
+# Items tagged VERIFY are provisional and must be ruled on by the author (docs/VERIFY_CHECKLIST.md).
+
+paths:
+  raw: data/raw
+  wonder: data/wonder
+  processed: data/processed
+  models: data/processed/models
+  paper: paper
+
+years:
+  train: [2016, 2017, 2018, 2019, 2020, 2021, 2022]
+  tune: [2023]
+  test: [2024]
+
+source:
+  # NCHS public-use natality zips. Filenames follow NatYYYYus.zip on the NCHS FTP tree.
+  url_template: "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Datasets/DVS/natality/Nat{year}us.zip"
+  record_length: 1330
+
+# Record layout, 1-based inclusive positions, from the User Guide to the 2024 Natality
+# Public Use File. VERIFY (V1): check every row against the guide for EACH year used;
+# add per-year overrides under layout_overrides if positions move.
+layout:
+  DOB_YY:      {start: 9,   end: 12,  type: int}
+  MAGER:       {start: 75,  end: 76,  type: int}
+  MBSTATE_REC: {start: 84,  end: 84,  type: int, na: [3]}
+  RESTATUS:    {start: 104, end: 104, type: int}
+  MRACEHISP:   {start: 117, end: 117, type: int, na: [8]}
+  DMAR:        {start: 120, end: 120, type: int, na: [9]}
+  MEDUC:       {start: 124, end: 124, type: int, na: [9]}
+  FAGECOMB:    {start: 147, end: 148, type: int, na: [99]}
+  PRIORLIVE:   {start: 171, end: 172, type: int, na: [99]}
+  PRIORDEAD:   {start: 173, end: 174, type: int, na: [99]}
+  LBO_REC:     {start: 179, end: 179, type: int, na: [9]}
+  PRECARE:     {start: 224, end: 225, type: int, na: [99]}
+  PREVIS:      {start: 238, end: 239, type: int, na: [99]}
+  WIC:         {start: 251, end: 251, type: yn}
+  CIG_0:       {start: 253, end: 254, type: int, na: [99]}
+  M_Ht_In:     {start: 280, end: 281, type: int, na: [99]}
+  BMI:         {start: 283, end: 286, type: float, na: [99.9]}
+  RF_PDIAB:    {start: 313, end: 313, type: yn}
+  RF_PHYPE:    {start: 315, end: 315, type: yn}
+  RF_PPTERM:   {start: 318, end: 318, type: yn}
+  RF_INFTR:    {start: 325, end: 325, type: yn}
+  RF_CESARN:   {start: 332, end: 333, type: int, na: [99]}
+  PAY_REC:     {start: 436, end: 436, type: int, na: [9]}
+  DPLURAL:     {start: 454, end: 454, type: int}
+  # VERIFY (V1): the guide extract gave OEGest_Comb 500-501 but OEGest_R10 501-502 (overlap);
+  # 499-500 is the value used in the 2014+ layouts. QA checks the value range.
+  OEGest_Comb: {start: 499, end: 500, type: int, na: [99]}
+  DBWT:        {start: 504, end: 507, type: int, na: [9999]}
+
+layout_overrides: {}   # e.g. {2016: {BMI: {start: 283, end: 286, type: float, na: [99.9]}}}
+
+cohort:
+  singleton_only: true
+  restatus_keep: [1, 2, 3]       # exclude foreign residents (4)
+  gest_min: 20
+  gest_max: 44
+
+outcomes:
+  LBW: {field: DBWT, rule: lt, value: 2500}
+  PTB: {field: OEGest_Comb, rule: lt, value: 37}
+
+# Items whose state-level missingness is simulated. Each maps to a model feature and a WONDER export.
+masked_items:
+  precare: {feature: precare_month, wonder_file: wonder_precare.txt}
+  bmi:     {feature: bmi,           wonder_file: wonder_bmi.txt}
+  wic:     {feature: wic,           wonder_file: wonder_wic.txt}
+  cig:     {feature: cig_pre,       wonder_file: wonder_cig.txt}
+  meduc:   {feature: meduc,         wonder_file: wonder_meduc.txt}
+  pay:     {feature: payer,         wonder_file: wonder_pay.txt}
+
+# VERIFY (V3): antenatal-only predictor set. prenatal_visits excluded by default (leakage into PTB).
+features:
+  always_observed: [mage, mracehisp, foreign_born, unmarried, fage_reported, lbo, priorlive,
+                    priordead, rf_pdiab, rf_phype, rf_ppterm, rf_inftr, rf_cesarn, birth_year]
+  include_prenatal_visits: false
+  categorical: [mracehisp, payer]
+
+wonder:
+  # Labels counted as "item missing" in WONDER exports (case-insensitive regex).
+  # VERIFY: "Not Available" means the state did not collect the item that year; counted as missing.
+  unknown_regex: "unknown|not stated|not reported|not available"
+  # WONDER suppresses cells of 1-9 births. Value used for a suppressed "unknown" cell. VERIFY
+  suppressed_value: 5
+
+masks:
+  mechanisms:
+    - {name: MCAR, beta: 0.0, rho: 0.0}
+    - {name: MAR,  beta: 1.0, rho: 0.5}     # VERIFY (V4, V5)
+  # MAR score: weights on always-observed covariates (standardized after weighting). VERIFY (V4)
+  mar_weights: {teen: 1.0, unmarried: 1.0, foreign_born: 0.5, nh_white: -0.5, high_parity: 0.5}
+  seed: 20261003
+
+models:
+  n_threads: -1
+  teacher_train_n: 3000000      # complete-case records sampled from train years
+  student_train_n: 1000000      # per student
+  crossfit_folds: 5             # out-of-fold teacher predictions for soft targets
+  lgbm:
+    learning_rate: 0.05
+    num_leaves: 63
+    min_data_in_leaf: 500
+    feature_fraction: 0.9
+    bagging_fraction: 0.8
+    bagging_freq: 1
+    lambda_l2: 1.0
+    num_boost_round: 2000
+    early_stopping_rounds: 50
+  kd:                           # VERIFY (V6)
+    alpha: 0.3                  # weight on hard label
+    tau: 1.0                    # temperature on teacher logit; tau=1 keeps targets calibrated
+  per_state_students: true
+  iterative_imputer_n: 200000
+
+evaluation:
+  eval_n: 400000                # test-year records evaluated per state (fixed sample, stratified)
+  alert_rate: 0.10              # VERIFY (V7)
+  teacher_sensitivity_target: 0.80
+  bootstrap_B: 200
+  ici_max_n: 20000             # lowess subsample for the integrated calibration index
+  bootstrap_states: [highest, median, lowest]   # per-state CIs only for these + pooled
+  subgroups: [mracehisp, mage_band, payer_obs, foreign_born]
+  min_subgroup_events: 50       # VERIFY (V8)
+  n_jobs: -1                    # parallel workers over states
+  recalibrate_on_tune: true     # also report logistic-recalibrated versions (secondary)
+
+final: false                    # true removes DRAFT stamps (only after verification gate)

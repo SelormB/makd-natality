@@ -1,0 +1,16 @@
+{
+  "_comment": "Author block. Every document, citation file, Zenodo record, manuscript author list, and commit reads from here. Order is author order. Roles use CRediT terms.",
+  "authors": [
+    {
+      "name": "Selorm Buaka",
+      "family": "Buaka",
+      "given": "Selorm",
+      "orcid": "[VERIFY: ORCID iD, format 0000-0000-0000-0000; value supplied was buak1126@bears.unco.edu, an email]",
+      "email": "[VERIFY: supplied as othnielbuaka@gnail.com; likely othnielbuaka@gmail.com]",
+      "affiliation": "University of Northern Colorado",
+      "roles": ["Conceptualization", "Methodology", "Software", "Validation", "Formal analysis", "Writing - original draft", "Writing - review and editing"],
+      "corresponding": true
+    }
+  ],
+  "collaborators": []
+}
