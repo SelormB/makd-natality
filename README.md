@@ -1,0 +1,43 @@
+**Status: DRAFT v0.1.0 (2026-10-03). Pipeline tested end-to-end on synthetic data only; no real-data results yet. Not for citation.**
+
+# MAKD-Natality
+
+Missingness-aware knowledge distillation for low birthweight (LBW) and preterm birth (PTB) prediction when U.S. states leave different birth-certificate items blank.
+
+A teacher model is trained on births with complete prenatal care onset, pre-pregnancy BMI, WIC, smoking, education, and payer. Students are distilled to work under each state's real item-missingness rates (from CDC WONDER), imposed on national records. Models are compared on sensitivity, positive predictive value, calibration, and subgroup performance, the measures that matter when the outcome is rare.
+
+Author: Selorm Buaka, University of Northern Colorado. See `AUTHORS.json`.
+
+## Why semi-synthetic
+Since 2005 the NCHS public-use natality files carry no state identifier, so a state's missingness cannot be read off the record-level data. This project takes each state's item-unknown rates from CDC WONDER and simulates them (MCAR and covariate-dependent MAR) on complete national records, plus one fully real check on records with naturally occurring missingness. See `docs/LIMITATIONS.md`.
+
+## Run it
+
+Requirements: Python 3.10+; `pip install -r requirements.txt`. Real-data runs need roughly 32 GB RAM and benefit from many cores (HPC recommended).
+
+```
+python code/01_fetch.py           # NCHS public-use zips, 2016–2024 (~200 MB each), provenance logged
+# manual: export 6 files from CDC WONDER into data/wonder/  (docs/WONDER_EXPORT_GUIDE.md)
+python code/02_parse.py           # fixed-width -> cohort parquet per year
+python code/03_wonder.py          # state x year x item unknown rates
+python code/04_qa.py              # READ data/processed/qa_report.txt before going further
+python code/05_train.py           # teacher, students, baselines
+python code/06_evaluate.py        # metrics by state, bootstrap, subgroups, natural missingness
+python code/07_figures.py         # paper/figures/
+python code/08_manuscript.py      # paper/manuscript.md from paper/stats.json
+```
+
+Every modeling decision is in `config.yaml`. Items marked VERIFY are provisional.
+
+Test without real data: `bash tests/run_smoke.sh` (synthetic files in the exact record layout, scratch copy of the repo, about 30 minutes on 2 cores).
+
+## Layout
+`code/` numbered scripts and the `makd` package · `config.yaml` · `data/raw` (not committed) · `data/processed/qa_report.txt` · `paper/` stats.json, tables, figures, manuscript · `docs/` build spec, codebook, limitations, verification checklist, WONDER export guide, literature triage, next steps, publish guide.
+
+## Sources
+- NCHS Natality Public Use Files 2016–2024, https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Datasets/DVS/natality/ (U.S. Government work; NCHS data use restrictions apply: no re-identification, no linkage).
+- CDC WONDER Natality, Expanded, https://wonder.cdc.gov/natality-expanded-current.html (WONDER data use restrictions apply).
+No microdata are redistributed in this repository.
+
+## License and citation
+Code: MIT (`LICENSE`). Documents: CC BY 4.0. Cite via `CITATION.cff` (DOI after release).
