@@ -36,6 +36,6 @@ Initial and date each line. `code/publish_gate.py` checks the mechanical items; 
 - [ ] AI-use disclosure matches the target journal's policy
 
 ## Before it goes public
-- [ ] **V10** AUTHORS.json: ORCID iD (current value is an email), email spelling
+- [ ] **V10** AUTHORS.json: ORCID iD set to 0009-0005-3991-4859 (confirm); email spelling
 - [ ] `config.yaml: final: true`, figures and manuscript regenerated; `python code/publish_gate.py . --allow-draft-in code/ tests/` passes (code and tests contain the stamping logic itself, so they are scanned as warnings, not blockers)
 - [ ] Evidence log row written the day of release

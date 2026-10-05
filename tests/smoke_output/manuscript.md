@@ -2,7 +2,7 @@
 
 # Missingness-aware knowledge distillation for low birthweight and preterm birth prediction under state-specific item missingness in U.S. birth certificates
 
-Selorm Buaka, University of Northern Colorado. ORCID [VERIFY: ORCID iD, format 0000-0000-0000-0000; value supplied was buak1126@bears.unco.edu, an email]. [VERIFY: supplied as othnielbuaka@gnail.com; likely othnielbuaka@gmail.com]
+Selorm Buaka, University of Northern Colorado. ORCID 0009-0005-3991-4859. [VERIFY: supplied as othnielbuaka@gnail.com; likely othnielbuaka@gmail.com]
 
 ## Abstract
 

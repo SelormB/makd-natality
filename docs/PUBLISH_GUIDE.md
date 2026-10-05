@@ -2,7 +2,7 @@
 
 Nothing here was pushed or submitted from the build session: no GitHub or Zenodo token was supplied, and arXiv and journal submission require your personal attestation. Do these only after every box in `docs/VERIFY_CHECKLIST.md` is ticked and `python code/publish_gate.py . --allow-draft-in code/ tests/` passes (code and tests contain the stamping logic itself, so they are scanned as warnings, not blockers).
 
-Author block for every form (from `AUTHORS.json`): **Selorm Buaka**, University of Northern Colorado, ORCID [VERIFY: your 0000-0000-0000-0000 iD], email [VERIFY].
+Author block for every form (from `AUTHORS.json`): **Selorm Buaka**, University of Northern Colorado, ORCID 0009-0005-3991-4859, email [VERIFY].
 
 ## 1. GitHub (target: January 2027)
 1. github.com/new → name `makd-natality`, public, empty (no README).
