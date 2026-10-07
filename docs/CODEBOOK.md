@@ -10,7 +10,7 @@ State-level missingness for each masked item comes from CDC WONDER (Natality, 20
 | mracehisp | MRACEHISP | Mother's race/Hispanic origin recode (categorical; 8 = unknown → NaN) | no |
 | foreign_born | MBSTATE_REC | 1 if born outside the U.S. (code 2); 3 = unknown → NaN | no |
 | unmarried | DMAR | 1 if unmarried (code 2); 9 → NaN | no |
-| fage_reported | FAGECOMB | 1 if father's age is stated (proxy for paternal information on the record) | no |
+| fage_reported | FAGECOMB | 1 if father's age is stated (proxy for paternal information on the record); values outside the documented 9–98 range are treated as not stated (one 2017 record has age 1) | no |
 | lbo | LBO_REC | Live birth order recode; 9 → NaN | no |
 | priorlive | PRIORLIVE | Prior births now living; 99 → NaN | no |
 | priordead | PRIORDEAD | Prior births now dead; 99 → NaN | no |

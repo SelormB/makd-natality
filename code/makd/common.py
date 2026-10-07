@@ -66,6 +66,9 @@ def _decode(block: np.ndarray, spec: dict) -> pd.Series:
     v = pd.to_numeric(s, errors="coerce")
     for na in spec.get("na", []):
         v = v.mask(np.isclose(v, na))
+    if "valid" in spec:   # documented range; values outside it are recording errors -> missing
+        lo, hi = spec["valid"]
+        v = v.where(v.between(lo, hi))
     return v.astype("float32")
 
 

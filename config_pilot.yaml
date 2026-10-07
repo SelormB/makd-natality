@@ -41,7 +41,7 @@ layout:
   MRACEHISP:   {start: 117, end: 117, type: int, na: [8]}
   DMAR:        {start: 120, end: 120, type: int, na: [9]}
   MEDUC:       {start: 124, end: 124, type: int, na: [9]}
-  FAGECOMB:    {start: 147, end: 148, type: int, na: [99]}
+  FAGECOMB:    {start: 147, end: 148, type: int, na: [99], valid: [9, 98]}   # 2017 has one record = 1; out-of-range -> missing
   PRIORLIVE:   {start: 171, end: 172, type: int, na: [99]}
   PRIORDEAD:   {start: 173, end: 174, type: int, na: [99]}
   LBO_REC:     {start: 179, end: 179, type: int, na: [9]}
