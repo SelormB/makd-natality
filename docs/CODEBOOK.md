@@ -1,6 +1,8 @@
 # Codebook — model features and outcomes (DRAFT)
 
-Source fields are NCHS public-use names (User Guide 2024). Positions are in `config.yaml` (verify V1). Missing codes become NaN.
+Source fields are NCHS public-use names (User Guide 2024). Positions are in `config.yaml`, checked against each year's guide by `code/00_check_layout.py`. Records are 1,345 characters plus CRLF; zips are Deflate64-compressed. Missing codes become NaN.
+
+State-level missingness for each masked item comes from CDC WONDER (Natality, 2016–2024 expanded): Month Prenatal Care Began; Mother's Pre-pregnancy BMI; WIC; Number of Cigarettes Before Pregnancy Recode; Mother's Education; Source of Payment for Delivery. "Unknown or Not Stated" and "Not Reported" count as missing.
 
 | Feature | Source field | Definition / transformation | Masked? |
 |---|---|---|---|

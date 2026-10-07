@@ -1,4 +1,4 @@
-**Status: DRAFT v0.1.0 (2026-10-03). Pipeline tested end-to-end on synthetic data only; no real-data results yet. Not for citation.**
+**Status: DRAFT v0.2.0 (2026-10-07). Real data verified (2023–2024 files match NVSR totals exactly; WONDER reconciles within 0.01 pt). Pilot run on real 2023→2024 data in `paper/pilot/`; main 2016–2024 run pending. Not for citation.**
 
 # MAKD-Natality
 
@@ -29,6 +29,8 @@ python code/08_manuscript.py      # paper/manuscript.md from paper/stats.json
 ```
 
 Every modeling decision is in `config.yaml`. Items marked VERIFY are provisional.
+
+Pilot on the 2023–2024 files only: prefix the 02–08 commands with `MAKD_CONFIG=config_pilot.yaml`.
 
 Test without real data: `bash tests/run_smoke.sh` (synthetic files in the exact record layout, scratch copy of the repo, about 30 minutes on 2 cores).
 

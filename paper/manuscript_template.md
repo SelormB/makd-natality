@@ -19,13 +19,13 @@
 ## 2. Methods
 
 ### 2.1 Data
-Live births in the NCHS natality public-use files, {{years_span}}. The cohort was restricted to singleton births to U.S.-resident mothers with stated birthweight and obstetric-estimate gestational age between 20 and 44 weeks. Training years {{train_years}}; tuning year {{tune_year}}; test year {{test_year}}. Public-use files carry no state identifier, so state-specific missingness was taken from CDC WONDER Natality (Expanded): for each state and item, the proportion of births with the item unknown or not stated in {{test_year}}.
+Live births in the NCHS natality public-use files, {{years_span}}. The cohort was restricted to singleton births to U.S.-resident mothers with stated birthweight and obstetric-estimate gestational age between 20 and 44 weeks. Training years {{train_years}}; tuning year {{tune_year}}; test year {{test_year}}. Public-use files carry no state identifier, so state-specific missingness was taken from CDC WONDER Natality (Expanded): for each state and item, the proportion of births with the item unknown or not stated in {{test_year}}. Parsed record counts for U.S. residents matched the registered-birth totals in the National Vital Statistics Reports exactly, and the national unknown rate for each item in WONDER agreed with the microdata to within 0.01 percentage points.
 
 ### 2.2 Outcomes and predictors
 LBW: birthweight < 2,500 g. PTB: obstetric-estimate gestation < 37 completed weeks. Predictors were restricted to information available before labor (Table S1); delivery and infant items were excluded to avoid leakage.
 
 ### 2.3 Missingness masks
-For record *i*, item *j*, state *s*: P(M_ij = 1 | z_i) = expit(c_sj + β z_i), where z_i is a standardized score of always-observed covariates and c_sj is solved so that the mean probability equals the state's WONDER rate. β = 0 gives MCAR. Within-record dependence used a one-factor Gaussian copula (ρ), which preserves each item's marginal probability. [VERIFY: β, ρ, MAR covariates — V4, V5]
+For record *i*, item *j*, state *s*: P(M_ij = 1 | z_i) = expit(c_sj + β z_i), where z_i is a standardized score of always-observed covariates and c_sj is solved so that the mean probability equals the state's WONDER rate. β = 0 gives MCAR. Within-record dependence used a one-factor Gaussian copula (ρ), which preserves each item's marginal probability. {{stress_sentence}}[VERIFY: β, ρ, MAR covariates, stress arm — V4, V5, V11]
 
 ### 2.4 Teacher, students, baselines
 Teacher: gradient-boosted trees (LightGBM) on records complete for all items, with {{K}}-fold cross-fitting so that soft targets for the student are out-of-fold. Student: same learner on masked inputs plus missingness indicators, trained with cross-entropy against q = α y + (1 − α) expit(logit(p_T)/τ), α = {{alpha}}, τ = {{tau}}; one student per state and one pooled over the births-weighted state mixture. Baselines: teacher with mean/mode imputation (B1); teacher with chained-equation imputation (B2); the student's learner trained on hard labels only (B3, the distillation ablation); logistic regression with missing indicators (B4).

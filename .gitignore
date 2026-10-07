@@ -10,3 +10,9 @@ __pycache__/
 data/processed/*.csv
 data/processed/*.json
 docs/sources/**/*.pdf
+# all processed outputs (record-level data, models, WONDER small counts) stay local
+data/processed*/
+paper/*/tables/_cache/
+.realdata-fixes.patch
+.src_transfer.tgz
+.sync.tgz

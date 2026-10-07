@@ -18,7 +18,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent))
 from makd.common import feature_names, load_config, masked_features, write_json  # noqa: E402
 from makd.data import (full_design, load_years, masked_design, pooled_masked_design,  # noqa: E402
-                       state_patterns, state_rng)
+                       state_patterns, state_rng, student_states)
 from makd.models import (IterImputer, LogisticMI, MeanModeImputer, crossfit_teacher,  # noqa: E402
                          fit_lgbm, soft_targets)
 
@@ -31,11 +31,12 @@ def main():
     md.mkdir(parents=True, exist_ok=True)
     feats, mf = feature_names(cfg), masked_features(cfg)
     patterns, weights = state_patterns(cfg)
-    log = {"n_states": len(patterns)}
+    log = {"n_states": len(patterns), "student_states": student_states(cfg, patterns)}
 
-    train = load_years(cfg, cfg["years"]["train"], M["teacher_train_n"], rng, complete_only=True)
-    tune_c = load_years(cfg, cfg["years"]["tune"], 500_000, rng, complete_only=True)
-    tune_all = load_years(cfg, cfg["years"]["tune"], 500_000, rng)
+    train = load_years(cfg, cfg["years"]["train"], M["teacher_train_n"], rng, complete_only=True,
+                       part="train")
+    tune_c = load_years(cfg, cfg["years"]["tune"], 500_000, rng, complete_only=True, part="tune")
+    tune_all = load_years(cfg, cfg["years"]["tune"], 500_000, rng, part="tune")
     log["teacher_train_n"], log["tune_complete_n"] = len(train), len(tune_c)
     stu_idx = rng.choice(len(train), min(M["student_train_n"], len(train)), replace=False)
 
@@ -72,7 +73,8 @@ def main():
                             md / f"B2_iter_{mech['name']}.joblib")
 
             if M["per_state_students"]:
-                for s, pat in patterns.items():
+                for s in student_states(cfg, patterns):
+                    pat = patterns[s]
                     srng = state_rng(cfg, s, stream=1)
                     XSs = masked_design(S, cfg, pat, mech, srng)
                     XVs = masked_design(tune_all, cfg, pat, mech, srng)
@@ -80,7 +82,7 @@ def main():
                     fit_lgbm(XSs, yS, XVs, yV, cfg, "binary").save_model(md / f"B3_{tag}_{safe}.txt")
                     fit_lgbm(XSs, q, XVs, yV, cfg, "cross_entropy").save_model(
                         md / f"KD_{tag}_{safe}.txt")
-                print(f"[state ] {tag}: {len(patterns)} states done")
+                print(f"[state ] {tag}: {len(student_states(cfg, patterns))} state students done")
     write_json(log, md / "train_log.json")
 
 

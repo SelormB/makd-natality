@@ -9,8 +9,8 @@ Initial and date each line. `code/publish_gate.py` checks the mechanical items; 
 - [ ] Every number in the manuscript traced to `paper/stats.json` after the re-run
 
 ## Source-level checks
-- [ ] **V1** Every layout position in `config.yaml` checked against the User Guide for 2016, 2020, and 2024 (layouts can shift); OEGest_Comb position resolved
-- [ ] **V2** `NVSR_REFERENCE` in `code/04_qa.py` filled from "Births: Final Data" for each year; parsed totals within 0.1%; LBW and PTB rates (all births) match NVSR
+- [ ] **V1** `python code/00_check_layout.py` reports every field ok for every year (2024: 26/26 ok on 2026-10-07; other years need their guides in docs/sources/user_guides). Open `data/processed/layout_check.csv` and spot-check three fields by hand in a guide
+- [ ] **V2** QA section 3 shows OK for every year (births match NVSR exactly; LBW/PTB within 0.15 pt of NVSR singleton rates). 2023 and 2024 passed 2026-10-07. Check three values in `docs/sources/nvsr/nvsr_reference.json` against the PDFs
 - [ ] QA section 5 reconciliation: WONDER vs file unknown rates within 0.5 points for every item-year
 - [ ] Five state-item rates checked by hand in WONDER (QA section 6 lists lowest/median/highest)
 
@@ -23,6 +23,8 @@ Initial and date each line. `code/publish_gate.py` checks the mechanical items; 
 - [ ] **V8** Subgroups and minimum 50 events per cell
 - [ ] "Not Available" counted as missing; suppressed WONDER cells set to 5
 - [ ] Cross-fitting K = 5 for soft targets
+- [ ] **V11** Stress arm (`MARx5`, real rates × 5): keep, change the multiplier, or drop; decide how the paper frames real-rate vs stress results
+- [ ] **V12** Pilot numbers (paper/pilot) are never quoted as results; only the main-design run is reported
 
 ## Row-level spot checks
 - [ ] Five parsed records compared field by field with the raw fixed-width line

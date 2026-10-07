@@ -15,7 +15,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def load_config(path: str | os.PathLike | None = None) -> dict:
-    path = Path(path) if path else ROOT / "config.yaml"
+    path = Path(path or os.environ.get("MAKD_CONFIG") or ROOT / "config.yaml")
+    if not path.is_absolute():
+        path = ROOT / path
     with open(path) as f:
         cfg = yaml.safe_load(f)
     for k, v in cfg["paths"].items():

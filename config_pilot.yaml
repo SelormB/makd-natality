@@ -1,16 +1,21 @@
+# PILOT configuration: real 2023-2024 data only. Run with MAKD_CONFIG=config_pilot.yaml.
+# Every difference from config.yaml is marked PILOT. Outputs go to data/processed_pilot and paper/pilot.
 # MAKD-Natality configuration. Every modeling decision lives here, not in code.
 # Items tagged VERIFY are provisional and must be ruled on by the author (docs/VERIFY_CHECKLIST.md).
 
 paths:
   raw: data/raw
   wonder: data/wonder
-  processed: data/processed
-  models: data/processed/models
-  paper: paper
+  processed: data/processed_pilot
+  models: data/processed_pilot/models
+  paper: paper/pilot
 
 years:
-  train: [2016, 2017, 2018, 2019, 2020, 2021, 2022]
+  # PILOT: only the 2023 and 2024 files are on hand. 2023 is split 80/20 into train/tune
+  # (fixed per-year random draw); 2024 is the test year, as in the main design.
+  train: [2023]
   tune: [2023]
+  holdout_frac: 0.2
   test: [2024]
 
 source:
@@ -22,7 +27,6 @@ source:
   files: {2016: Nat2016us.zip, 2017: Nat2017US.zip, 2018: Nat2018us.zip, 2019: Nat2019us.zip,
           2020: Nat2020us.zip, 2021: nat2021us.zip, 2022: nat2022us.zip, 2023: Nat2023us.zip,
           2024: Nat2024us.zip}
-  # Byte sizes from the FTP directory listing (checked 2026-10-07); fetch verifies against these
   sizes: {2016: 248367974, 2017: 242776873, 2018: 228246064, 2019: 226407903, 2020: 229997676,
           2021: 232756903, 2022: 222103574, 2023: 229522736, 2024: 231829759}
 
@@ -97,15 +101,19 @@ masks:
   mechanisms:
     - {name: MCAR, beta: 0.0, rho: 0.0}
     - {name: MAR,  beta: 1.0, rho: 0.5}     # VERIFY (V4, V5)
+    # Stress arm (author's call whether to keep): every state's real rates x5, capped at 95%.
+    # Real state rates are small (median ~1%, max ~10-14%), so this shows how methods
+    # behave if completeness were much worse, e.g. a state not collecting an item.
+    - {name: MARx5, beta: 1.0, rho: 0.5, rate_multiplier: 5}
   # MAR score: weights on always-observed covariates (standardized after weighting). VERIFY (V4)
   mar_weights: {teen: 1.0, unmarried: 1.0, foreign_born: 0.5, nh_white: -0.5, high_parity: 0.5}
   seed: 20261003
 
 models:
   n_threads: -1
-  teacher_train_n: 3000000      # complete-case records sampled from train years
-  student_train_n: 1000000      # per student
-  crossfit_folds: 5             # out-of-fold teacher predictions for soft targets
+  teacher_train_n: 1500000      # PILOT size (main: 3,000,000)      # complete-case records sampled from train years
+  student_train_n: 400000       # per student; PILOT size (main: 1,000,000)
+  crossfit_folds: 3             # PILOT (main: 5)
   lgbm:
     learning_rate: 0.05
     num_leaves: 63
@@ -120,13 +128,15 @@ models:
     alpha: 0.3                  # weight on hard label
     tau: 1.0                    # temperature on teacher logit; tau=1 keeps targets calibrated
   per_state_students: true
+  # PILOT: own students for the 6 highest-missingness states plus the median and lowest state
+  student_states: {auto: 6}
   iterative_imputer_n: 200000
 
 evaluation:
-  eval_n: 400000                # test-year records evaluated per state (fixed sample, stratified)
+  eval_n: 100000                # PILOT (main: 400,000)
   alert_rate: 0.10              # VERIFY (V7)
   teacher_sensitivity_target: 0.80
-  bootstrap_B: 200
+  bootstrap_B: 100               # PILOT (main: 200)
   ici_max_n: 20000             # lowess subsample for the integrated calibration index
   bootstrap_states: [highest, median, lowest]   # per-state CIs only for these + pooled
   subgroups: [mracehisp, mage_band, payer_obs, foreign_born]

@@ -47,7 +47,13 @@ def style():
         "legend.frameon": False, "lines.linewidth": 2})
 
 
+PILOT = False   # set in main() from the config's train years
+
+
 def stamp(fig, final, synthetic):
+    if PILOT and not synthetic:
+        fig.text(0.005, 0.005, "PILOT: train 2023, test 2024; reduced samples", ha="left",
+                 va="bottom", fontsize=7, color="#52514e")
     if synthetic:
         fig.text(0.5, 0.5, "SYNTHETIC TEST DATA", ha="center", va="center", fontsize=28,
                  color="#e34948", alpha=0.18, rotation=25)
@@ -187,6 +193,8 @@ def main():
     cfg = load_config()
     final = cfg["final"] or "--final" in sys.argv
     syn = bool(__import__("os").environ.get("MAKD_SMOKE"))
+    global PILOT
+    PILOT = set(cfg["years"]["train"]) & set(cfg["years"]["tune"]) != set()
     style()
     tabs, figs = cfg["paths"]["paper"] / "tables", cfg["paths"]["paper"] / "figures"
     figs.mkdir(parents=True, exist_ok=True)

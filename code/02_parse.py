@@ -29,7 +29,7 @@ def main():
     from makd.common import read_natality
     out = cfg["paths"]["processed"]
     out.mkdir(parents=True, exist_ok=True)
-    years = cfg["years"]["train"] + cfg["years"]["tune"] + cfg["years"]["test"]
+    years = sorted(set(cfg["years"]["train"] + cfg["years"]["tune"] + cfg["years"]["test"]))
     log = {}
     for y in years:
         src = find_raw(cfg["paths"]["raw"], y)

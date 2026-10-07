@@ -8,6 +8,7 @@ Writes paper/tables/: metrics_by_state.csv, bootstrap_selected_states.csv,
 subgroups.csv, natural_missingness.csv; and paper/stats.json (headline numbers for the text).
 """
 import sys
+import time
 from pathlib import Path
 
 import joblib
@@ -146,13 +147,15 @@ def main():
     mf = masked_features(cfg)
     tabs = cfg["paths"]["paper"] / "tables"
     tabs.mkdir(parents=True, exist_ok=True)
+    cache = tabs / "_cache"          # per (outcome, mechanism) checkpoints; delete to recompute
+    cache.mkdir(exist_ok=True)
 
     test = load_years(cfg, cfg["years"]["test"], ev["eval_n"], rng, complete_only=True)
-    tune = load_years(cfg, cfg["years"]["tune"], ev["eval_n"], rng, complete_only=True)
+    tune = load_years(cfg, cfg["years"]["tune"], ev["eval_n"], rng, complete_only=True, part="tune")
     test_all = load_years(cfg, cfg["years"]["test"], None, rng)
     natural = test_all[test_all[mf].isna().any(axis=1)]
     natural = natural.sample(min(len(natural), ev["eval_n"]), random_state=1).reset_index(drop=True)
-    tune_all = load_years(cfg, cfg["years"]["tune"], None, rng)
+    tune_all = load_years(cfg, cfg["years"]["tune"], None, rng, part="tune")
     nat_tune = tune_all[tune_all[mf].isna().any(axis=1)]
     nat_tune = nat_tune.sample(min(len(nat_tune), ev["eval_n"]), random_state=2).reset_index(drop=True)
     del test_all, tune_all
@@ -175,14 +178,22 @@ def main():
         pT_te, pT_tu = T.predict(full_design(test, cfg)), T.predict(full_design(tune, cfg))
 
         for mech in cfg["masks"]["mechanisms"]:
+            ck = cache / f"{outcome}_{mech['name']}.pkl"
+            if ck.exists():
+                r_, b_, s_ = pd.read_pickle(ck)
+                rows += r_; boots += b_; subs += s_
+                print(f"[eval] {outcome} {mech['name']}: cached", flush=True)
+                continue
+            t0 = time.time()
+            r_blk, b_blk, s_blk = [], [], []
             bank = Bank(cfg, outcome, mech["name"])
             jobs = Parallel(n_jobs=ev["n_jobs"], verbose=0)(
                 delayed(eval_state)(cfg, outcome, mech, st, pat, test, tune, pT_te, pT_tu,
                                     float(mean_rate[st]), st in boot_states)
                 for st, pat in patterns.items())
             for r_, b_ in jobs:
-                rows += r_
-                boots += b_
+                r_blk += r_
+                b_blk += b_
 
             # national deployment (births-weighted state mixture) for subgroup analysis
             mrng = np.random.default_rng([cfg["masks"]["seed"], 4])
@@ -203,10 +214,20 @@ def main():
                         continue
                     for (m, _), (_, ta, ts, p) in res.items():
                         met = all_metrics(y_te[msk], p[msk], ta, ts)
-                        subs.append({"outcome": outcome, "mechanism": mech["name"], "subgroup": gname,
+                        s_blk.append({"outcome": outcome, "mechanism": mech["name"], "subgroup": gname,
                                      "level": str(level), "model": m, **met})
 
+
+            pd.to_pickle((r_blk, b_blk, s_blk), ck)
+            rows += r_blk; boots += b_blk; subs += s_blk
+            print(f"[eval] {outcome} {mech['name']}: {len(patterns)} states in {time.time() - t0:.0f} s", flush=True)
+
         # natural missingness: real incomplete records, pooled models trained under each mechanism
+        ckn = cache / f"{outcome}_natural.pkl"
+        if ckn.exists():
+            nat_rows += pd.read_pickle(ckn)
+            continue
+        n_before = len(nat_rows)
         Xn, Xnt = add_indicators(natural[feature_names(cfg)], mf), add_indicators(nat_tune[feature_names(cfg)], mf)
         y_n, y_nt = natural[outcome].to_numpy(), nat_tune[outcome].to_numpy()
         for mech in cfg["masks"]["mechanisms"]:
@@ -215,6 +236,7 @@ def main():
             for (m, v), (met, ta, ts, _) in res.items():
                 nat_rows.append({"outcome": outcome, "trained_under": mech["name"], "model": m,
                                  "calibration": v, **met})
+        pd.to_pickle(nat_rows[n_before:], ckn)
 
     M = pd.DataFrame(rows)
     M.to_csv(tabs / "metrics_by_state.csv", index=False)
@@ -245,6 +267,9 @@ def main():
                 "n_states": int(len(kd))}
         stats["outcomes"][o]["mechanisms"][mech] = summ
     stats["synthetic"] = bool(__import__("os").environ.get("MAKD_SMOKE"))
+    stats["pilot"] = bool(set(cfg["years"]["train"]) & set(cfg["years"]["tune"]))
+    stats["years"] = cfg["years"]
+    stats["mechanisms"] = cfg["masks"]["mechanisms"]
     write_json(stats, cfg["paths"]["paper"] / "stats.json")
     print(f"[eval] {len(M)} metric rows; stats -> paper/stats.json")
 

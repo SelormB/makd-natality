@@ -67,11 +67,17 @@ def main():
     ctx = {
         "banner": ("" if cfg["final"] else "> **DRAFT — not for circulation. Numbers below are "
                    + ("from SYNTHETIC test data and are meaningless.**" if stats.get("synthetic")
+                      else "from the PILOT run (train 80% of 2023, tune 20% of 2023, test 2024; reduced "
+                           "samples). Feasibility only: do not quote. The main design trains on 2016-2022.**"
+                      if stats.get("pilot")
                       else "unverified until the author completes docs/VERIFY_CHECKLIST.md.**")),
         "author_block": "\n".join(f"{a['name']}, {a['affiliation']}. ORCID {a['orcid']}. {a['email']}"
                                   for a in authors),
         "years_span": f"{y['train'][0]}–{y['test'][-1]}",
-        "train_years": f"{y['train'][0]}–{y['train'][-1]}", "tune_year": str(y["tune"][0]),
+        "train_years": (f"{y['train'][0]}–{y['train'][-1]}" if not stats.get("pilot")
+                        else f"{y['train'][0]} ({100 - int(100 * y.get('holdout_frac', 0.2))}% of records)"),
+        "tune_year": (str(y["tune"][0]) if not stats.get("pilot")
+                      else f"{y['tune'][0]} (held-out {int(100 * y.get('holdout_frac', 0.2))}%)"),
         "test_year": str(y["test"][0]), "K": str(cfg["models"]["crossfit_folds"]),
         "alpha": str(cfg["models"]["kd"]["alpha"]), "tau": str(cfg["models"]["kd"]["tau"]),
         "B": str(cfg["evaluation"]["bootstrap_B"]), "n_states": str(stats["n_states"]),
@@ -79,6 +85,10 @@ def main():
         "natural_missing_n_test": f"{stats['natural_missing_n_test']:,}",
         "code_doi": "[DOI: Zenodo, after release]",
         "results_paragraphs": results_paragraphs(stats),
+        "stress_sentence": "".join(
+            f"A stress arm ({m['name']}) multiplied every state's observed rates by {m['rate_multiplier']:g}, "
+            "capped at 95%, to show behavior under much poorer completeness than any state reports. "
+            for m in stats.get("mechanisms", []) if m.get("rate_multiplier", 1) != 1),
     }
 
     def sub(m):

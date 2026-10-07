@@ -99,3 +99,19 @@ ASSUMPTIONS:    Predictors and outcomes per the defaults above (author left Q2/Q
                 sandbox cannot reach ftp.cdc.gov or WONDER, so v0.1 is tested on
                 synthetic files in the exact record layout.
 ```
+
+## Status update, 2026-10-07: what the real data established
+
+**Data in hand.** NCHS public-use files for 2023 and 2024 (2016–2022 downloading); CDC WONDER state × year × item exports for all six masked items, 2016–2024; NVSR *Births: Final Data* 2016–2024; User Guide 2024 (2016–2023 downloading). All in `data/` and `docs/sources/`.
+
+**Verified.**
+- Record layout (V1): every configured field position matches the 2024 User Guide (`code/00_check_layout.py`); other years run automatically when their guides arrive. Records are 1,345 characters plus CRLF, not 1,330.
+- Totals (V2): U.S.-resident records equal NVSR registered births exactly (2023: 3,596,017; 2024: 3,628,934). Cohort LBW and PTB rates are within 0.05 points of NVSR singleton-only rates.
+- WONDER exports reconcile with the microdata: national unknown rates agree within 0.01 points for all six items in both years.
+- Smoking item: WONDER's "Number of Cigarettes Before Pregnancy Recode" is used (matches CIG_0). "Tobacco Use" covers the whole pregnancy and was not used.
+
+**Changes forced by the real files.** NCHS zips use Deflate64 compression (parser now streams through `unzip`); server filenames vary in case by year (now listed in config); WONDER exports may omit total rows (denominator bug fixed).
+
+**Design consequence (for the author to rule on).** Real state-level item missingness is low: across 2016–2024 the worst state-year for any item is about 14% (Tennessee, prenatal care, 2016), the median state is near 1%, and only 8 states exceed a 3% mean in any year. At real rates the room for any method to beat imputation is small. The pilot therefore adds a stress arm (`MARx5`: every state's real rates × 5, capped at 95%). Whether to keep it, and how to frame it, is decision V11.
+
+**Pilot.** `config_pilot.yaml` runs the full pipeline on real data now: train on 80% of 2023, tune on the other 20%, test on 2024; reduced sample sizes; per-state students for the 6 highest-missingness states plus the median and lowest state. Outputs in `data/processed_pilot/` and `paper/pilot/`. The main design (train 2016–2022) is unchanged and runs with `config.yaml` once all years are present.

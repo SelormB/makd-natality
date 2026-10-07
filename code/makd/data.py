@@ -9,12 +9,22 @@ from .masks import add_indicators, apply_mask, draw_mask
 
 
 def load_years(cfg: dict, years: list[int], n: int | None, rng: np.random.Generator,
-               complete_only: bool = False) -> pd.DataFrame:
-    """Concatenate cohort years; optionally keep records complete on masked items; sample n."""
+               complete_only: bool = False, part: str | None = None) -> pd.DataFrame:
+    """Concatenate cohort years; optionally keep records complete on masked items; sample n.
+
+    part: 'train' or 'tune'. When a year is listed as both a training and a tuning year
+    (the pilot design), its records are split by a fixed per-year random draw:
+    a fraction years.holdout_frac goes to 'tune', the rest to 'train'.
+    """
     mf = masked_features(cfg)
+    shared = set(cfg["years"]["train"]) & set(cfg["years"]["tune"])
+    frac = cfg["years"].get("holdout_frac", 0.2)
     frames = []
     for y in years:
         d = pd.read_parquet(cfg["paths"]["processed"] / f"cohort_{y}.parquet")
+        if part in ("train", "tune") and y in shared:
+            is_tune = np.random.default_rng([cfg["masks"]["seed"], int(y), 99]).random(len(d)) < frac
+            d = d[is_tune] if part == "tune" else d[~is_tune]
         if complete_only:
             d = d[d[mf].notna().all(axis=1)]
         frames.append(d)
@@ -38,6 +48,9 @@ def state_patterns(cfg: dict) -> tuple[dict, pd.Series]:
 def masked_design(f: pd.DataFrame, cfg: dict, pattern: dict, mech: dict,
                   rng: np.random.Generator) -> pd.DataFrame:
     """Apply one state's mask (one mechanism) and add missingness indicators."""
+    mult = float(mech.get("rate_multiplier", 1.0))
+    if mult != 1.0:   # stress arm: scale every item's real rate, capped below 1
+        pattern = {k: min(0.95, v * mult) for k, v in pattern.items()}
     m = draw_mask(f, pattern, cfg["masked_items"], mech["beta"], mech["rho"],
                   cfg["masks"]["mar_weights"], rng)
     X = apply_mask(f[feature_names(cfg)], m)
@@ -64,3 +77,20 @@ def state_rng(cfg: dict, state: str, stream: int) -> np.random.Generator:
 
 def full_design(f: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     return f[feature_names(cfg)]
+
+
+def student_states(cfg: dict, patterns: dict) -> list[str]:
+    """States that get their own distilled student.
+
+    models.student_states: "all" (default), a list of state names, or {"auto": K}, which picks
+    the K states with the highest mean unknown rate plus the median and the lowest state.
+    """
+    spec = cfg["models"].get("student_states", "all")
+    if spec == "all":
+        return list(patterns)
+    if isinstance(spec, list):
+        return [s for s in spec if s in patterns]
+    k = int(spec["auto"])
+    order = sorted(patterns, key=lambda s: np.mean(list(patterns[s].values())))
+    pick = order[-k:] + [order[len(order) // 2], order[0]]
+    return list(dict.fromkeys(reversed(pick)))

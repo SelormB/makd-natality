@@ -11,4 +11,6 @@
 9. **Temporal validation only.** Training 2016–2022, testing 2024, including the COVID-19 period in training; no external (non-U.S.) validation.
 10. **Single learner family.** Teacher and student are gradient-boosted trees; results may not transfer to other learners.
 11. **Fairness measures are descriptive.** Subgroup metrics are reported, not corrected; small subgroups are suppressed below the event minimum (V8).
-12. **Synthetic test data.** Any number produced by `tests/run_smoke.sh` is meaningless and stamped as such.
+12. **Real missingness is low.** In WONDER 2016–2024 the median state leaves each item unknown for about 1% of births; the maximum for any item in any state-year is about 14%. Results at real rates speak to small gains; the ×5 stress arm is a hypothetical, not an observed state.
+13. **Pilot results use one training year.** The pilot trains on 2023 only (80/20 split) with reduced sample sizes and per-state students for 8 states. It is a feasibility check, not the reported analysis.
+14. **Synthetic test data.** Any number produced by `tests/run_smoke.sh` is meaningless and stamped as such.

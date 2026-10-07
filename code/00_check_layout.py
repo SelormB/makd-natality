@@ -52,7 +52,7 @@ def main():
     cfg = load_config()
     root = Path(__file__).resolve().parents[1]
     folder = root / "docs/sources/user_guides"
-    years = cfg["years"]["train"] + cfg["years"]["tune"] + cfg["years"]["test"]
+    years = sorted(set(cfg["years"]["train"] + cfg["years"]["tune"] + cfg["years"]["test"]))
     rows, bad, missing_guides = [], 0, []
     for y in years:
         pdf = guide_for(y, folder)
