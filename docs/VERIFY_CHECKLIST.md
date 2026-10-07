@@ -9,8 +9,8 @@ Initial and date each line. `code/publish_gate.py` checks the mechanical items; 
 - [ ] Every number in the manuscript traced to `paper/stats.json` after the re-run
 
 ## Source-level checks
-- [ ] **V1** `python code/00_check_layout.py` reports every field ok for every year (2024: 26/26 ok on 2026-10-07; other years need their guides in docs/sources/user_guides). Open `data/processed/layout_check.csv` and spot-check three fields by hand in a guide
-- [ ] **V2** QA section 3 shows OK for every year (births match NVSR exactly; LBW/PTB within 0.15 pt of NVSR singleton rates). 2023 and 2024 passed 2026-10-07. Check three values in `docs/sources/nvsr/nvsr_reference.json` against the PDFs
+- [ ] **V1** `python code/00_check_layout.py` reports every field ok for every year (2017–2024: 26/26 fields ok for every year on 2026-10-07; the 2016 guide is not yet downloaded, but 2016 totals match NVSR exactly). Open `data/processed/layout_check.csv` and spot-check three fields by hand in a guide
+- [ ] **V2** QA section 3 shows OK for every year (births match NVSR exactly; LBW/PTB within 0.15 pt of NVSR singleton rates). 2016, 2017, 2023 and 2024 passed 2026-10-07. Check three values in `docs/sources/nvsr/nvsr_reference.json` against the PDFs
 - [ ] QA section 5 reconciliation: WONDER vs file unknown rates within 0.5 points for every item-year
 - [ ] Five state-item rates checked by hand in WONDER (QA section 6 lists lowest/median/highest)
 
