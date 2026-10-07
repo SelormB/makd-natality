@@ -16,7 +16,8 @@ Since 2005 the NCHS public-use natality files carry no state identifier, so a st
 Requirements: Python 3.10+; `pip install -r requirements.txt`. Real-data runs need roughly 32 GB RAM and benefit from many cores (HPC recommended).
 
 ```
-python code/01_fetch.py           # NCHS public-use zips, 2016–2024 (~200 MB each), provenance logged
+python code/00_check_layout.py    # verify field positions against each year's User Guide (docs/sources/user_guides)
+python code/01_fetch.py           # NCHS public-use zips, 2016–2024 (~230 MB each), provenance logged
 # manual: export 6 files from CDC WONDER into data/wonder/  (docs/WONDER_EXPORT_GUIDE.md)
 python code/02_parse.py           # fixed-width -> cohort parquet per year
 python code/03_wonder.py          # state x year x item unknown rates

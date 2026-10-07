@@ -1,0 +1,65 @@
+{
+ "2016": {
+  "births": "Source of payment for the delivery, by race and Hispanic origin of mother: United States, 2016 U.S. DEPARTMENT OF HEALTH AND HUMAN SERVICES Centers for Disease Control and Prevention National Center for Health Statistics National Vital Statistics System 2 Nati",
+  "ptb_all": "Infant Health Characteristics (Tables 20\u201325) Period of gestation The U.S. preterm birth rate rose to 9.85% in 2016, a 2% rise from 2015 (9.63%) and the second straight year of increase for this rate (9.57% in 2014)",
+  "ptb_singleton": "The 2016 preterm birth rate for singleton births only was 8.02%, a 3% increase over 2015 (7.82%)",
+  "lbw_all": "National Vital Statistics Reports, Vol. 67, No. 1, January 31, 2018 Birthweight The percentage of infants born low birthweight (LBW) rose 1% in 2016 to 8.17%, from 8.07% in 2015",
+  "lbw_singleton": "The LBW rate among singleton births only rose from 6.34% in 2015 to 6.44% in 2016 (10)"
+ },
+ "2017": {
+  "births": "Results\u2014 A total of 3,855,500 births were registered in the United States in 2017, down 2% from 2016",
+  "ptb_all": "Infant Health Characteristics (Tables 20\u201325) Period of gestation The U.S. preterm birth rate rose to 9.93% in 2017, a 1% rise from 2016 (9.85%), and the third straight year of increases in this rate (9.57% in 2014)",
+  "ptb_singleton": "The 2017 preterm birth rate for singleton births only was 8.13%, a 1% increase over the 2016 level of 8.02%, and a 4% increase from 2015 (7.82%)",
+  "lbw_all": "Birthweight The percentage of infants born low birthweight (LBW) rose for the third year in a row, to 8.28% in 2017 from 8.17% in 2016",
+  "lbw_singleton": "The LBW rate among singleton births only rose from 6.44% 2016 2015 60 2017 58.47 57.94 57.49 50 Percent 40 30 24.99 25.47 26.00 20 10 6.87 2.76 0 2.76 7.09 7.17 6.91 6.73 6.58 2.76 Less than 34 34\u201336 37\u201338 Weeks of gestation NOTE: Gestational age is based on t"
+ },
+ "2018": {
+  "births": "Number and rate of triplet and higher-order multiple births: United States, 1980\u20132018 U.S. DEPARTMENT OF HEALTH AND HUMAN SERVICES Centers for Disease Control and Prevention National Center for Health Statistics National Vital Statistics System NCHS reports ca",
+  "ptb_all": "The preterm birth rate rose for the fourth straight year to 10.02% in 2018; the rate of low birthweight was unchanged at 8.28%",
+  "ptb_singleton": null,
+  "lbw_all": "Birthweight The percentage of infants born low birthweight (LBW) was unchanged for 2017\u20132018 at 8.28%",
+  "lbw_singleton": "The LBW rate among singleton births only rose from 6.56% to 6.60% from 2017 to 2018 (15); the increase was among infants born moderately low birthweight (see Table for 2018 data and \u201cMultiple births\u201d)"
+ },
+ "2019": {
+  "births": "VBAC 2019 2 National Vital Statistics Reports, Vol. 70, No. 2, March 23, 2021 Results\u2014A total of 3,747,540 births were registered in the United States in 2019, down 1% from 2018",
+  "ptb_all": "The preterm birth rate rose for the fifth straight year to 10.23% in 2019; the rate of low birthweight was essentially unchanged from 2018 at 8.31%",
+  "ptb_singleton": "The 2019 preterm birth rate for singleton births only was 8.47%, a 3% increase over the 2018 level of 8.24%, and an 8% rise from 2015 (7.82%)",
+  "lbw_all": "Birthweight The percentage of infants born low birthweight (LBW) was 8.31% for 2019, a nonsignificant increase from 2018 (8.28%)",
+  "lbw_singleton": "The LBW rate among singleton births only rose from 6.60% to 6.67% from 2018 to 2019 (15); the increase was among infants born moderately low birthweight; see the Table for 2019 data and \u201cMultiple births.\u201d It can be informative to examine births in singleton de"
+ },
+ "2020": {
+  "births": "U.S. DEPARTMENT OF HEALTH AND HUMAN SERVICES Centers for Disease Control and Prevention National Center for Health Statistics National Vital Statistics System NCHS reports can be downloaded from: https://www.cdc.gov/nchs/products/index.htm. 2015 2020 0 Rate pe",
+  "ptb_all": "The preterm birth rate declined to 10.09% in 2020 from 10.23% in 2019; the rate of low birthweight declined from 2019 to 8.24%",
+  "ptb_singleton": "The 2020 preterm birth rate for singleton births only was 8.42%, less than a 1% (0.6%) decline from the 2019 level of 8.47%",
+  "lbw_all": "Birthweight The percentage of infants born low birthweight (LBW; less than 2,500 grams or 5 pounds, 8 ounces) declined 1%, from 8.31% in 2019 to 8.24% in 2020 (Figure 3)",
+  "lbw_singleton": "The LBW rate among singleton births only was essentially unchanged in 2020 at 6.68% compared with 6.67% in 2019 (Figure 3) (17); see the Table for 2020 data"
+ },
+ "2021": {
+  "births": "U.S. DEPARTMENT OF HEALTH AND HUMAN SERVICES Centers for Disease Control and Prevention National Center for Health Statistics National Vital Statistics System NCHS reports can be downloaded from: https://www.cdc.gov/nchs/products/index.htm. 2015 2020 2021 0 Ra",
+  "ptb_all": "The preterm birth rate rose 4% to 10.49%; the low birthweight rate also rose (to 8.52%)",
+  "ptb_singleton": "The 2021 preterm birth rate for singleton births only was 8.76%, up 4% from the 2020 level of 8.42%",
+  "lbw_all": "The preterm birth rate rose 4% to 10.49%; the low birthweight rate also rose (to 8.52%)",
+  "lbw_singleton": "The LBW rate among singleton births only increased 4%, from 6.68% in 2020 to 6.93% in 2021 (15); see Table for 2021 data"
+ },
+ "2022": {
+  "births": "Demographic Characteristics (Tables 1\u201312) Births and birth rates Number of births In 2022, 3,667,758 births were registered in the United States, essentially unchanged from 2021 (3,664,292)",
+  "ptb_all": "The preterm birth rate declined 1% to 10.38%; the low birthweight rate rose 1% to 8.60%",
+  "ptb_singleton": "The 2022 preterm birth rate for singleton births only was 8.67%, down 1% from the 2021 level of 8.76% (12)",
+  "lbw_all": "The preterm birth rate declined 1% to 10.38%; the low birthweight rate rose 1% to 8.60%",
+  "lbw_singleton": "The LBW rate among singleton births only increased 1%, from 6.93% in 2021 to 7.01% in 2022 (15); see Table B for 2022 data"
+ },
+ "2023": {
+  "births": "Demographic Characteristics (Tables 1\u201312) Births and birth rates Number of births In 2023, 3,596,017 births were registered in the United States, down 2% from 2022 (3,667,758)",
+  "ptb_all": "Infant Health Characteristics (Tables 20\u201325) Period of gestation The U.S. preterm birth rate was essentially unchanged in 2023 at 10.41% compared with 10.38% in 2022",
+  "ptb_singleton": "The 2023 preterm birth rate for singleton births only was 8.71%, less than a 1% increase from the 2022 rate of 8.67% (see Table B for 2023 data) (15)",
+  "lbw_all": "Birthweight The percentage of infants born low birthweight (LBW; less than 2,500 grams or 5 pounds, 8 ounces) was 8.58% in 2023, a nonsignificant decline from 2022 (8.60%) (Tables 22 and 23)",
+  "lbw_singleton": "The LBW rate among singleton births only was essentially unchanged at 7.00% in 2023 compared with 7.01% in 2022 (15); see Table B for 2023 data"
+ },
+ "2024": {
+  "births": "Demographic Characteristics Births and birth rates Number of births In 2024, 3,628,934 births were registered in the United States, up 1% from the record low reported for 2023 (3,596,017)",
+  "ptb_all": null,
+  "ptb_singleton": "The 2024 preterm birth rate for singleton births only was 8.76%, a 1% increase from the 2023 rate of 8.71% (see Table E for 2024 data) (7)",
+  "lbw_all": "Birthweight The percentage of infants born low birthweight (LBW; less than 2,500 grams or 5 pounds, 8 ounces) in 2024 declined 1% from 2023, from 8.58% to 8.52%",
+  "lbw_singleton": "The LBW rate among singleton births only was unchanged from 2023 at 7.00% in 2024 (7); see Table E for 2024 data"
+ }
+}
