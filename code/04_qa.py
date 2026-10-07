@@ -20,10 +20,11 @@ EXPECTED = {"MAGER": (12, 50), "DBWT": (227, 8165), "OEGest_Comb": (17, 47), "BM
             "DPLURAL": (1, 5), "RESTATUS": (1, 4), "CIG_0": (0, 98), "M_Ht_In": (30, 78),
             "LBO_REC": (1, 9), "FAGECOMB": (9, 98), "PRIORLIVE": (0, 30), "RF_CESARN": (0, 30)}
 
-# VERIFY (V2): fill from NVSR "Births: Final Data for <year>" (all births; LBW %, PTB % are
-# all births, not singletons). The QA compares parsed totals with these.
-NVSR_REFERENCE = {y: {"births": None, "lbw_pct_all": None, "ptb_pct_all": None}
-                  for y in range(2016, 2025)}
+# Reference values from NVSR "Births: Final Data for <year>", transcribed into
+# docs/sources/nvsr/nvsr_reference.json (with the quoted source sentences alongside).
+_REF = Path(__file__).resolve().parents[1] / "docs/sources/nvsr/nvsr_reference.json"
+NVSR_REFERENCE = ({int(k): v for k, v in json.loads(_REF.read_text()).items() if not k.startswith("_")}
+                  if _REF.exists() else {})
 
 # WONDER item -> national-file raw field, for reconciliation of unknown rates.
 RECON = {"precare": "PRECARE", "bmi": "BMI", "wic": "WIC", "cig": "CIG_0", "meduc": "MEDUC",
@@ -59,14 +60,28 @@ def main():
     for y, d in log.items():
         w(f"  {y}  " + "  ".join(f"{d['steps'][s]:>14,}" for s in steps))
 
-    w("\n3. Outcome rates in cohort (singletons) and parsed totals vs NVSR reference")
+    w("\n3. Parsed totals and outcome rates vs NVSR Births: Final Data")
+    w("   births: records with RESTATUS 1-3 (U.S. residents) vs NVSR registered births (should match exactly)")
+    w("   rates: cohort (singleton, stated outcomes, 20-44 wk) vs NVSR singleton-only rates (expect within ~0.1 pt)")
     for y, d in log.items():
-        ref = NVSR_REFERENCE.get(int(y), {})
-        tot = d["steps"]["parsed"]
-        refb = ref.get("births")
-        cmp = (f"  parsed {tot:,} vs NVSR {refb:,} ({100 * (tot - refb) / refb:+.2f}%)" if refb
-               else "  NVSR reference not filled [VERIFY: V2]")
-        w(f"  {y}: LBW {100 * d['outcome_rates']['LBW']:.2f}%  PTB {100 * d['outcome_rates']['PTB']:.2f}%{cmp}")
+        ref = NVSR_REFERENCE.get(int(y))
+        lbw, ptb = 100 * d["outcome_rates"]["LBW"], 100 * d["outcome_rates"]["PTB"]
+        if not ref:
+            w(f"  {y}: LBW {lbw:.2f}%  PTB {ptb:.2f}%  NVSR reference missing")
+            continue
+        us = d.get("us_resident_records", d["steps"]["parsed"])
+        db = us - ref["births"]
+        flags = []
+        if db != 0:
+            flags.append("births")
+        if abs(lbw - ref["lbw_pct_singleton"]) > 0.15:
+            flags.append("LBW")
+        if abs(ptb - ref["ptb_pct_singleton"]) > 0.15:
+            flags.append("PTB")
+        fails += bool(flags)
+        w(f"  {y}: births {us:,} vs {ref['births']:,} ({db:+,})  "
+          f"LBW {lbw:.2f}% vs {ref['lbw_pct_singleton']:.2f}%  PTB {ptb:.2f}% vs {ref['ptb_pct_singleton']:.2f}%"
+          + (f"  <-- CHECK {', '.join(flags)}" if flags else "  OK"))
 
     w("\n4. Item missingness in the national file (raw fields, all records)")
     items = ["PRECARE", "BMI", "WIC", "CIG_0", "MEDUC", "PAY_REC", "PREVIS", "FAGECOMB"]

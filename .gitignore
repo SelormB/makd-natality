@@ -7,3 +7,6 @@ data/wonder/*.txt
 __pycache__/
 *.part
 .env
+data/processed/*.csv
+data/processed/*.json
+docs/sources/**/*.pdf

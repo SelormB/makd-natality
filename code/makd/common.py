@@ -79,11 +79,28 @@ def read_natality(path: str | os.PathLike, cfg: dict, year: int,
         for block in _iter_record_chunks(fh, reclen, chunk_records):
             frames.append(pd.DataFrame({k: _decode(block, v) for k, v in lay.items()}))
 
-    if path.suffix == ".zip":
-        with zipfile.ZipFile(path) as z:
-            name = max(z.namelist(), key=lambda n: z.getinfo(n).file_size)
-            with z.open(name) as fh:
-                _consume(io.BufferedReader(fh, buffer_size=1 << 24))
+    if path.suffix.lower() == ".zip":
+        # NCHS zips use Deflate64 (method 9), which the standard zipfile module cannot read.
+        # Stream through Info-ZIP `unzip -p` when available; else use zipfile-deflate64.
+        import shutil
+        import subprocess
+        if shutil.which("unzip"):
+            proc = subprocess.Popen(["unzip", "-p", str(path)], stdout=subprocess.PIPE, bufsize=1 << 24)
+            try:
+                _consume(proc.stdout)
+            finally:
+                proc.stdout.close()
+                if proc.wait() != 0:
+                    raise RuntimeError(f"unzip failed on {path}")
+        else:
+            try:
+                import zipfile_deflate64 as zf
+            except ImportError:
+                zf = zipfile
+            with zf.ZipFile(path) as z:
+                name = max(z.namelist(), key=lambda n: z.getinfo(n).file_size)
+                with z.open(name) as fh:
+                    _consume(io.BufferedReader(fh, buffer_size=1 << 24))
     else:
         with open(path, "rb") as fh:
             _consume(fh)

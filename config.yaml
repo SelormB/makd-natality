@@ -15,8 +15,13 @@ years:
 
 source:
   # NCHS public-use natality zips. Filenames follow NatYYYYus.zip on the NCHS FTP tree.
-  url_template: "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Datasets/DVS/natality/Nat{year}us.zip"
-  record_length: 1330
+  url_base: "https://ftp.cdc.gov/pub/Health_Statistics/NCHS/Datasets/DVS/natality/"
+  # 1,345-character records plus CRLF (verified on the 2023 and 2024 files, 2026-10-07)
+  record_length: 1345
+  # Exact server filenames (capitalization varies by year on ftp.cdc.gov)
+  files: {2016: Nat2016us.zip, 2017: Nat2017US.zip, 2018: Nat2018us.zip, 2019: Nat2019us.zip,
+          2020: Nat2020us.zip, 2021: nat2021us.zip, 2022: nat2022us.zip, 2023: Nat2023us.zip,
+          2024: Nat2024us.zip}
 
 # Record layout, 1-based inclusive positions, from the User Guide to the 2024 Natality
 # Public Use File. VERIFY (V1): check every row against the guide for EACH year used;
@@ -46,8 +51,7 @@ layout:
   RF_CESARN:   {start: 332, end: 333, type: int, na: [99]}
   PAY_REC:     {start: 436, end: 436, type: int, na: [9]}
   DPLURAL:     {start: 454, end: 454, type: int}
-  # VERIFY (V1): the guide extract gave OEGest_Comb 500-501 but OEGest_R10 501-502 (overlap);
-  # 499-500 is the value used in the 2014+ layouts. QA checks the value range.
+  # 499-500 confirmed against the 2024 User Guide (2026-10-07).
   OEGest_Comb: {start: 499, end: 500, type: int, na: [99]}
   DBWT:        {start: 504, end: 507, type: int, na: [9999]}
 

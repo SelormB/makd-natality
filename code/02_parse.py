@@ -4,6 +4,7 @@
 Writes data/processed/cohort_{year}.parquet (features + LBW, PTB) and
 data/processed/parse_log.json (row counts per step, raw item-missing rates).
 """
+import re
 import sys
 from pathlib import Path
 
@@ -13,10 +14,13 @@ from makd.common import (add_outcomes, build_cohort, load_config, make_features,
 
 
 def find_raw(raw: Path, year: int) -> Path:
-    for pat in (f"Nat{year}us.zip", f"Nat{year}*.zip", f"Nat{year}*.txt", f"*{year}*.txt"):
-        hits = sorted(raw.glob(pat))
-        if hits:
-            return hits[0]
+    files = sorted(x for x in raw.iterdir() if x.suffix.lower() in (".zip", ".txt"))
+    for x in files:
+        if re.fullmatch(rf"nat{year}us\.(zip|txt)", x.name, re.I):
+            return x
+    for x in files:
+        if str(year) in x.name and x.name.lower().startswith("nat"):
+            return x
     raise FileNotFoundError(f"no natality file for {year} in {raw}")
 
 
@@ -40,7 +44,7 @@ def main():
         for o in cfg["outcomes"]:
             feats[o] = coh[o].to_numpy()
         feats.to_parquet(out / f"cohort_{y}.parquet", index=False)
-        log[y] = {"file": src.name, "dob_yy_values": {str(k): int(v) for k, v in yr_vals.items()},
+        log[y] = {"file": src.name, "us_resident_records": int((df["RESTATUS"] != 4).sum()), "dob_yy_values": {str(k): int(v) for k, v in yr_vals.items()},
                   "steps": steps, "raw_missing": raw_missing, "raw_ranges": ranges,
                   "outcome_rates": {o: float(coh[o].mean()) for o in cfg["outcomes"]},
                   "feature_missing": {c: float(feats[c].isna().mean()) for c in feats.columns}}

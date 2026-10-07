@@ -85,8 +85,8 @@ def gen_year(year, n, rng, state_rates):
     return r, st, item_missing
 
 
-def encode(r, i, lay, item_missing):
-    rec = bytearray(b" " * 1330)
+def encode(r, i, lay, item_missing, reclen=1345):
+    rec = bytearray(b" " * reclen)
     missing_fields = {ITEM_FIELD[k] for k, v in item_missing.items() if v[i]}
     for name, spec in lay.items():
         a, b = spec["start"] - 1, spec["end"]
@@ -155,7 +155,7 @@ def main():
     for y in years:
         r, st, miss = gen_year(y, a.n_per_year, rng, state_rates)
         year_data[y] = (r, st, miss)
-        body = b"\n".join(encode(r, i, cfg["layout"], miss) for i in range(a.n_per_year)) + b"\n"
+        body = b"\n".join(encode(r, i, cfg["layout"], miss, cfg["source"]["record_length"]) for i in range(a.n_per_year)) + b"\n"
         with zipfile.ZipFile(root / f"data/raw/Nat{y}us.zip", "w", zipfile.ZIP_DEFLATED) as z:
             z.writestr(f"Nat{y}PublicUS.SYNTHETIC.txt", body)
         print(f"[synthetic] {y}: {a.n_per_year:,} records")

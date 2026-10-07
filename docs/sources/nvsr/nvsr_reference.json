@@ -1,0 +1,12 @@
+{
+  "_source": "National Vital Statistics Reports, 'Births: Final Data for <year>' (files NVSR_births_final_<year>.pdf in this folder). Values transcribed from report text by pattern extraction on 2026-10-07; quoted sentences in nvsr_extract_sentences.json. births = births registered to U.S. residents; rates in percent.",
+  "2016": {"births": 3945875, "lbw_pct_all": 8.17, "ptb_pct_all": 9.85,  "lbw_pct_singleton": 6.44, "ptb_pct_singleton": 8.02},
+  "2017": {"births": 3855500, "lbw_pct_all": 8.28, "ptb_pct_all": 9.93,  "lbw_pct_singleton": 6.56, "ptb_pct_singleton": 8.13},
+  "2018": {"births": 3791712, "lbw_pct_all": 8.28, "ptb_pct_all": 10.02, "lbw_pct_singleton": 6.60, "ptb_pct_singleton": 8.24},
+  "2019": {"births": 3747540, "lbw_pct_all": 8.31, "ptb_pct_all": 10.23, "lbw_pct_singleton": 6.67, "ptb_pct_singleton": 8.47},
+  "2020": {"births": 3613647, "lbw_pct_all": 8.24, "ptb_pct_all": 10.09, "lbw_pct_singleton": 6.68, "ptb_pct_singleton": 8.42},
+  "2021": {"births": 3664292, "lbw_pct_all": 8.52, "ptb_pct_all": 10.49, "lbw_pct_singleton": 6.93, "ptb_pct_singleton": 8.76},
+  "2022": {"births": 3667758, "lbw_pct_all": 8.60, "ptb_pct_all": 10.38, "lbw_pct_singleton": 7.01, "ptb_pct_singleton": 8.67},
+  "2023": {"births": 3596017, "lbw_pct_all": 8.58, "ptb_pct_all": 10.41, "lbw_pct_singleton": 7.00, "ptb_pct_singleton": 8.71},
+  "2024": {"births": 3628934, "lbw_pct_all": 8.52, "ptb_pct_all": 10.41, "lbw_pct_singleton": 7.00, "ptb_pct_singleton": 8.76}
+}

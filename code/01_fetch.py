@@ -24,8 +24,9 @@ def main():
     raw = cfg["paths"]["raw"]
     raw.mkdir(parents=True, exist_ok=True)
     for y in a.years:
-        url = cfg["source"]["url_template"].format(year=y)
-        dest = raw / Path(url).name
+        name = cfg["source"]["files"][y]
+        url = cfg["source"]["url_base"] + name
+        dest = raw / name
         if dest.exists():
             print(f"[skip] {dest.name} exists")
             continue
@@ -35,7 +36,7 @@ def main():
         tmp.rename(dest)
         subprocess.run([sys.executable, str(Path(__file__).parent / "provenance.py"), str(dest), url,
                         "--log", str(raw / "PROVENANCE.txt"),
-                        "--note", "NCHS natality public-use file; URL pattern from NCHS FTP directory listing"],
+                        "--note", "NCHS natality public-use file; filename from the NCHS FTP directory listing"],
                        check=True)
 
 

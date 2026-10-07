@@ -40,8 +40,8 @@ def parse_item(path: Path, item: str, unknown_re: re.Pattern, suppressed_value: 
     num = pd.to_numeric(df[births].str.replace(",", ""), errors="coerce")
     is_total = notes.fillna("").str.strip().eq("Total") & df[label].isna()
     # state-year denominators from WONDER's own Total rows (not affected by cell suppression)
-    tot = (df[is_total & df[state].notna() & df[year].notna()]
-           .assign(_b=num).groupby([df[state], df[year]])["_b"].first())
+    tt = df[is_total & df[state].notna() & df[year].notna()].assign(_b=num)
+    tot = tt.groupby([state, year])["_b"].first()   # empty when the export has no total rows
     d = df[~notes.fillna("").str.strip().eq("Total") & df[label].notna()].copy()
     d["_births"] = num.loc[d.index]
     d["_supp"] = d[births].str.contains("Suppressed", case=False, na=False)
