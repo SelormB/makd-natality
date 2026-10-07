@@ -52,8 +52,8 @@ PILOT = False   # set in main() from the config's train years
 
 def stamp(fig, final, synthetic):
     if PILOT and not synthetic:
-        fig.text(0.005, 0.005, "PILOT: train 2023, test 2024; reduced samples", ha="left",
-                 va="bottom", fontsize=7, color="#52514e")
+        fig.text(0.005, 0.995, "PILOT: train 2023, test 2024; reduced samples", ha="left",
+                 va="top", fontsize=7, color="#52514e")
     if synthetic:
         fig.text(0.5, 0.5, "SYNTHETIC TEST DATA", ha="center", va="center", fontsize=28,
                  color="#e34948", alpha=0.18, rotation=25)
@@ -75,8 +75,9 @@ def fig1(rates, year, out, final, syn):
              "cig": "Smoking", "meduc": "Mother's education", "pay": "Payer"}
     ax.set_yticks(range(len(items)), [names.get(i, i) for i in items])
     ax.set_xscale("symlog", linthresh=1)
-    ticks = [0, 0.5, 1, 2, 5, 10, 20, 50, 100]
-    ax.set_xlim(0, 100)
+    vmax = 100 * r["rate"].max()
+    ticks = [t for t in [0, 0.5, 1, 2, 5, 10, 20, 50, 100] if t <= vmax * 1.5] 
+    ax.set_xlim(0, max(ticks[-1], vmax * 1.2))
     ax.set_xticks(ticks, [f"{t:g}" for t in ticks])
     ax.minorticks_off()
     ax.set_xlabel(f"Births with item unknown or not stated, % (each dot a state, {year}; bar = median)")
@@ -90,7 +91,7 @@ def fig1(rates, year, out, final, syn):
 def fig2(M, out, final, syn):
     raw = M[M["calibration"] == "raw"]
     outs, mechs = sorted(raw["outcome"].unique()), sorted(raw["mechanism"].unique())
-    fig, axes = plt.subplots(2, len(outs) * len(mechs), figsize=(10, 5.2), sharex=True)
+    fig, axes = plt.subplots(2, len(outs) * len(mechs), figsize=(2.1 * len(outs) * len(mechs), 5.6), sharex=True)
     axes = np.atleast_2d(axes)
     for j, (o, mch) in enumerate([(o, m) for o in outs for m in mechs]):
         g = raw[(raw["outcome"] == o) & (raw["mechanism"] == mch)]
@@ -109,12 +110,13 @@ def fig2(M, out, final, syn):
                 ax.set_title(f"{o}, {mch}", loc="left")
             if j == 0:
                 ax.set_ylabel(f"{lab} at 10% alert rate\nminus teacher (points)")
-            if row == 1:
-                ax.set_xlabel("State mean unknown rate, %")
+
     h, l = axes[0, 0].get_legend_handles_labels()
-    fig.legend(h, l, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.01))
+    fig.supxlabel("State mean unknown rate across the six items, % (real WONDER rates; the x5 arm multiplies them)",
+                  y=0.075, fontsize=9, color=INK2)
+    fig.legend(h, l, loc="lower center", ncol=4, bbox_to_anchor=(0.5, -0.005))
     stamp(fig, final, syn)
-    fig.tight_layout(rect=(0, 0.06, 1, 1))
+    fig.tight_layout(rect=(0, 0.09, 1, 0.97))
     fig.savefig(out, dpi=300)
     plt.close(fig)
 

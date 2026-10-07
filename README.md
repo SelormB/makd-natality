@@ -26,11 +26,12 @@ python code/05_train.py           # teacher, students, baselines
 python code/06_evaluate.py        # metrics by state, bootstrap, subgroups, natural missingness
 python code/07_figures.py         # paper/figures/
 python code/08_manuscript.py      # paper/manuscript.md from paper/stats.json
+python code/09_summary.py         # paper/summary.md: headline comparisons from the tables
 ```
 
 Every modeling decision is in `config.yaml`. Items marked VERIFY are provisional.
 
-Pilot on the 2023–2024 files only: prefix the 02–08 commands with `MAKD_CONFIG=config_pilot.yaml`.
+Pilot on the 2023–2024 files only: prefix the 02–09 commands with `MAKD_CONFIG=config_pilot.yaml`. Results: `paper/pilot/summary.md`, figures in `paper/pilot/figures/` (about 40 min training + 60 min evaluation on 2 cores).
 
 Test without real data: `bash tests/run_smoke.sh` (synthetic files in the exact record layout, scratch copy of the repo, about 30 minutes on 2 cores).
 

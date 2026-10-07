@@ -101,7 +101,7 @@ def main():
         except (KeyError, TypeError):
             return f"[MISSING:{key}]"
 
-    text = re.sub(r"\{\{([^}]+)\}\}", sub, (paper / "manuscript_template.md").read_text())
+    text = re.sub(r"\{\{([^}]+)\}\}", sub, (ROOT / "paper" / "manuscript_template.md").read_text())
     (paper / "manuscript.md").write_text(text)
     print(f"[manuscript] -> {paper / 'manuscript.md'}")
 

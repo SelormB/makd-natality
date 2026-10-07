@@ -49,7 +49,8 @@ class Bank:
 
     @staticmethod
     def _p(b, X):
-        return b.predict(X[b.feature_name()])
+        # one thread per call: evaluation already runs states in parallel worker processes
+        return b.predict(X[b.feature_name()], num_threads=1)
 
     def predict(self, X, state=None):
         f = self.feats
@@ -271,7 +272,7 @@ def main():
     stats["years"] = cfg["years"]
     stats["mechanisms"] = cfg["masks"]["mechanisms"]
     write_json(stats, cfg["paths"]["paper"] / "stats.json")
-    print(f"[eval] {len(M)} metric rows; stats -> paper/stats.json")
+    print(f"[eval] {len(M)} metric rows; stats -> {cfg['paths']['paper'] / 'stats.json'}")
 
 
 if __name__ == "__main__":

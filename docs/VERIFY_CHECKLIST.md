@@ -25,6 +25,7 @@ Initial and date each line. `code/publish_gate.py` checks the mechanical items; 
 - [ ] Cross-fitting K = 5 for soft targets
 - [ ] **V11** Stress arm (`MARx5`, real rates × 5): keep, change the multiplier, or drop; decide how the paper frames real-rate vs stress results
 - [ ] **V12** Pilot numbers (paper/pilot) are never quoted as results; only the main-design run is reported
+- [ ] **V13** Natural-missingness analysis: add bootstrap CIs and decide whether it becomes a primary analysis (it is the only fully real test)
 
 ## Row-level spot checks
 - [ ] Five parsed records compared field by field with the raw fixed-width line
