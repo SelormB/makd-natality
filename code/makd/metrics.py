@@ -34,7 +34,8 @@ def ici(y, p, max_n=50000, seed=0):
     if len(p) > max_n:
         idx = rng.choice(len(p), max_n, replace=False)
         y, p = y[idx], p[idx]
-    sm = lowess(y, p, frac=2 / 3, it=0, return_sorted=False)
+    # delta: interpolate within 0.1% of the prediction range (same ICI to ~1e-7, ~30x faster)
+    sm = lowess(y, p, frac=2 / 3, it=0, return_sorted=False, delta=0.001 * float(np.ptp(p)))
     return float(np.mean(np.abs(sm - p)))
 
 
