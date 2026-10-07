@@ -138,6 +138,37 @@ def eval_state(cfg, outcome, mech, s, pat, test, tune, pT_te, pT_tu, mean_unknow
     return rows, boots
 
 
+def natural_bootstrap(y, res, outcome, mech_name, B, seed=13):
+    """Stratified bootstrap on records with naturally missing items: per-model CIs for AUROC and
+    PPV at the alert threshold, and paired differences of the pooled distilled student against
+    each baseline (same resamples, thresholds fixed on the tune year)."""
+    preds = {m: (ta, p) for (m, v), (_, ta, _, p) in res.items() if v == "raw"}
+    rng = np.random.default_rng(seed)
+    i1, i0 = np.flatnonzero(y == 1), np.flatnonzero(y == 0)
+    draws = {m: [] for m in preds}
+    for _ in range(B):
+        ii = np.concatenate([rng.choice(i1, len(i1)), rng.choice(i0, len(i0))])
+        yy = y[ii]
+        for m, (ta, p) in preds.items():
+            pp = p[ii]
+            draws[m].append((roc_auc_score(yy, pp), at_threshold(yy, pp, ta)[1]))
+    out = []
+    for m, d in draws.items():
+        d = np.asarray(d)
+        lo, hi = np.percentile(d, [2.5, 97.5], axis=0)
+        out.append({"outcome": outcome, "trained_under": mech_name, "model": m,
+                    "auroc_lo": lo[0], "auroc_hi": hi[0], "ppv_alert_lo": lo[1], "ppv_alert_hi": hi[1]})
+    if "KD_pooled" in draws:
+        kd = np.asarray(draws["KD_pooled"])
+        for m in ("B1_teacher_meanimp", "B2_teacher_iterimp", "B3_pooled", "B4_logistic_pooled"):
+            if m in draws:
+                diff = kd - np.asarray(draws[m])
+                lo, hi = np.percentile(diff, [2.5, 97.5], axis=0)
+                out.append({"outcome": outcome, "trained_under": mech_name, "model": f"DIFF_KDpooled_minus_{m}",
+                            "auroc_lo": lo[0], "auroc_hi": hi[0], "ppv_alert_lo": lo[1], "ppv_alert_hi": hi[1]})
+    return out
+
+
 def main():
     cfg = load_config()
     ev = cfg["evaluation"]
@@ -167,7 +198,7 @@ def main():
             "highest": mean_rate.index[-1]}
     boot_states = {pick[k] for k in ev["bootstrap_states"] if k in pick}
 
-    rows, boots, subs, nat_rows = [], [], [], []
+    rows, boots, subs, nat_rows, nat_boot = [], [], [], [], []
     stats = {"n_states": len(patterns), "eval_n_test": len(test), "eval_n_tune": len(tune),
              "natural_missing_n_test": len(natural), "states_picked": pick,
              "mean_unknown_rate_by_state": mean_rate.round(5).to_dict(), "outcomes": {}}
@@ -226,9 +257,10 @@ def main():
         # natural missingness: real incomplete records, pooled models trained under each mechanism
         ckn = cache / f"{outcome}_natural.pkl"
         if ckn.exists():
-            nat_rows += pd.read_pickle(ckn)
+            a_, b_ = pd.read_pickle(ckn)
+            nat_rows += a_; nat_boot += b_
             continue
-        n_before = len(nat_rows)
+        n_before, nb_before = len(nat_rows), len(nat_boot)
         Xn, Xnt = add_indicators(natural[feature_names(cfg)], mf), add_indicators(nat_tune[feature_names(cfg)], mf)
         y_n, y_nt = natural[outcome].to_numpy(), nat_tune[outcome].to_numpy()
         for mech in cfg["masks"]["mechanisms"]:
@@ -237,13 +269,15 @@ def main():
             for (m, v), (met, ta, ts, _) in res.items():
                 nat_rows.append({"outcome": outcome, "trained_under": mech["name"], "model": m,
                                  "calibration": v, **met})
-        pd.to_pickle(nat_rows[n_before:], ckn)
+            nat_boot += natural_bootstrap(y_n, res, outcome, mech["name"], ev["bootstrap_B"])
+        pd.to_pickle((nat_rows[n_before:], nat_boot[nb_before:]), ckn)
 
     M = pd.DataFrame(rows)
     M.to_csv(tabs / "metrics_by_state.csv", index=False)
     pd.DataFrame(boots).to_csv(tabs / "bootstrap_selected_states.csv", index=False)
     pd.DataFrame(subs).to_csv(tabs / "subgroups.csv", index=False)
     pd.DataFrame(nat_rows).to_csv(tabs / "natural_missingness.csv", index=False)
+    pd.DataFrame(nat_boot).to_csv(tabs / "natural_missingness_bootstrap.csv", index=False)
 
     # headline numbers: gap to the oracle teacher, summarized across states
     raw = M[M["calibration"] == "raw"]
@@ -268,7 +302,24 @@ def main():
                 "n_states": int(len(kd))}
         stats["outcomes"][o]["mechanisms"][mech] = summ
     stats["synthetic"] = bool(__import__("os").environ.get("MAKD_SMOKE"))
-    stats["pilot"] = bool(set(cfg["years"]["train"]) & set(cfg["years"]["tune"]))
+    stats["run_label"] = cfg.get("run_label", "main")
+    stats["pilot"] = stats["run_label"] == "pilot"
+    # natural-missingness headline numbers (point estimates and bootstrap CIs) for the text
+    NR = pd.DataFrame(nat_rows)
+    NB = pd.DataFrame(nat_boot)
+    nat = {}
+    if len(NR):
+        for (o, mname), g in NR[NR.calibration == "raw"].groupby(["outcome", "trained_under"]):
+            e = nat.setdefault(o, {}).setdefault(mname, {"models": {}, "diffs": {}})
+            for _, r in g.iterrows():
+                e["models"][r.model] = {"auroc": float(r.auroc), "ppv_alert": float(r.ppv_alert),
+                                        "n": int(r.n), "events": int(r.events)}
+            for _, r in NB[(NB.outcome == o) & (NB.trained_under == mname)].iterrows():
+                tgt = e["diffs"] if r.model.startswith("DIFF_") else e["models"].setdefault(r.model, {})
+                key = r.model.replace("DIFF_KDpooled_minus_", "") if r.model.startswith("DIFF_") else "ci"
+                tgt[key] = {"auroc": [float(r.auroc_lo), float(r.auroc_hi)],
+                            "ppv_alert": [float(r.ppv_alert_lo), float(r.ppv_alert_hi)]}
+    stats["natural"] = nat
     stats["years"] = cfg["years"]
     stats["mechanisms"] = cfg["masks"]["mechanisms"]
     write_json(stats, cfg["paths"]["paper"] / "stats.json")

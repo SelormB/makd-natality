@@ -145,3 +145,4 @@ evaluation:
   recalibrate_on_tune: true     # also report logistic-recalibrated versions (secondary)
 
 final: false                    # true removes DRAFT stamps (only after verification gate)
+run_label: pilot                # pilot | available | main: sets banners and stamps

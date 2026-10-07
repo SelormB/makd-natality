@@ -9,6 +9,7 @@ Saves to data/processed/models/: boosters (.txt), imputers and logistic models (
 and train_log.json (sizes, best iterations, prevalence).
 """
 import sys
+import zlib
 from pathlib import Path
 
 import joblib
@@ -44,13 +45,32 @@ def main():
     joblib.dump(MeanModeImputer(mf, cfg["features"]["categorical"]).fit(train[feats]),
                 md / "B1_meanmode.joblib")
 
+    def stream(tag):
+        """Independent random stream per step, so a resumed run draws the same masks."""
+        return np.random.default_rng([cfg["masks"]["seed"], zlib.crc32(tag.encode())])
+
+    def fit_once(path, fit):
+        """Fit and save unless the model file already exists (resume after an interruption)."""
+        if path.exists():
+            return
+        obj = fit()
+        if hasattr(obj, "save_model"):
+            obj.save_model(path)
+        else:
+            joblib.dump(obj, path)
+
     for outcome in cfg["outcomes"]:
         y, yv = train[outcome].to_numpy(), tune_c[outcome].to_numpy()
-        print(f"[teacher] {outcome}: n={len(train):,}, prevalence={y.mean():.4f}")
-        teacher, oof = crossfit_teacher(full_design(train, cfg), y, full_design(tune_c, cfg), yv,
-                                        cfg, rng)
-        teacher.save_model(md / f"T_{outcome}.txt")
-        log[f"T_{outcome}"] = {"best_iter": teacher.best_iteration, "prevalence": float(y.mean())}
+        print(f"[teacher] {outcome}: n={len(train):,}, prevalence={y.mean():.4f}", flush=True)
+        tpath, opath = md / f"T_{outcome}.txt", md / f"oof_{outcome}.npy"
+        if tpath.exists() and opath.exists():
+            teacher, oof = lgb.Booster(model_file=str(tpath)), np.load(opath)
+        else:
+            teacher, oof = crossfit_teacher(full_design(train, cfg), y, full_design(tune_c, cfg), yv,
+                                            cfg, stream(f"teacher_{outcome}"))
+            np.save(opath, oof)
+            teacher.save_model(tpath)
+        log[f"T_{outcome}"] = {"trees": teacher.num_trees(), "prevalence": float(y.mean())}
 
         S = train.iloc[stu_idx].reset_index(drop=True)
         yS = y[stu_idx]
@@ -59,18 +79,18 @@ def main():
 
         for mech in cfg["masks"]["mechanisms"]:
             tag = f"{outcome}_{mech['name']}"
-            XS, _ = pooled_masked_design(S, cfg, patterns, weights, mech, rng)
-            XV, _ = pooled_masked_design(tune_all, cfg, patterns, weights, mech, rng)
+            mrng = stream(f"pooled_{tag}")
+            XS, _ = pooled_masked_design(S, cfg, patterns, weights, mech, mrng)
+            XV, _ = pooled_masked_design(tune_all, cfg, patterns, weights, mech, mrng)
             yV = tune_all[outcome].to_numpy()
 
-            print(f"[pooled] {tag}")
-            fit_lgbm(XS, yS, XV, yV, cfg, "binary").save_model(md / f"B3_{tag}_pooled.txt")
-            fit_lgbm(XS, q, XV, yV, cfg, "cross_entropy").save_model(md / f"KD_{tag}_pooled.txt")
-            joblib.dump(LogisticMI(cfg).fit(XS, yS), md / f"B4_{tag}_pooled.joblib")
-            if outcome == list(cfg["outcomes"])[0]:   # imputer is outcome-free; fit once per mech
-                n_imp = min(M["iterative_imputer_n"], len(XS))
-                joblib.dump(IterImputer(feats, cfg["masks"]["seed"]).fit(XS.iloc[:n_imp][feats]),
-                            md / f"B2_iter_{mech['name']}.joblib")
+            print(f"[pooled] {tag}", flush=True)
+            fit_once(md / f"B3_{tag}_pooled.txt", lambda: fit_lgbm(XS, yS, XV, yV, cfg, "binary"))
+            fit_once(md / f"KD_{tag}_pooled.txt", lambda: fit_lgbm(XS, q, XV, yV, cfg, "cross_entropy"))
+            fit_once(md / f"B4_{tag}_pooled.joblib", lambda: LogisticMI(cfg).fit(XS, yS))
+            n_imp = min(M["iterative_imputer_n"], len(XS))   # imputer is outcome-free; once per mech
+            fit_once(md / f"B2_iter_{mech['name']}.joblib",
+                     lambda: IterImputer(feats, cfg["masks"]["seed"]).fit(XS.iloc[:n_imp][feats]))
 
             if M["per_state_students"]:
                 for s in student_states(cfg, patterns):
@@ -79,10 +99,10 @@ def main():
                     XSs = masked_design(S, cfg, pat, mech, srng)
                     XVs = masked_design(tune_all, cfg, pat, mech, srng)
                     safe = s.replace(" ", "_")
-                    fit_lgbm(XSs, yS, XVs, yV, cfg, "binary").save_model(md / f"B3_{tag}_{safe}.txt")
-                    fit_lgbm(XSs, q, XVs, yV, cfg, "cross_entropy").save_model(
-                        md / f"KD_{tag}_{safe}.txt")
-                print(f"[state ] {tag}: {len(student_states(cfg, patterns))} state students done")
+                    fit_once(md / f"B3_{tag}_{safe}.txt", lambda: fit_lgbm(XSs, yS, XVs, yV, cfg, "binary"))
+                    fit_once(md / f"KD_{tag}_{safe}.txt",
+                             lambda: fit_lgbm(XSs, q, XVs, yV, cfg, "cross_entropy"))
+                print(f"[state ] {tag}: {len(student_states(cfg, patterns))} state students done", flush=True)
     write_json(log, md / "train_log.json")
 
 

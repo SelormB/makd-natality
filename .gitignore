@@ -16,3 +16,5 @@ paper/*/tables/_cache/
 .realdata-fixes.patch
 .src_transfer.tgz
 .sync.tgz
+.sync*.tgz
+data/run_*.log

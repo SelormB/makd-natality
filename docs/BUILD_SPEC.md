@@ -121,3 +121,11 @@ ASSUMPTIONS:    Predictors and outcomes per the defaults above (author left Q2/Q
 2. Distillation beats the same learner without distillation (paired bootstrap: small, consistent AUROC gain; PPV difference not distinguishable from zero).
 3. On real records with naturally missing items, the students (trained on masked data with missing indicators) rank above teacher + imputation. Simulated MCAR/MAR masks may understate informative missingness; this is the strongest argument for the method and needs CIs and the main-design data.
 4. Logistic regression with missing indicators trails the tree models throughout.
+
+## Available-data design, 2026-10-07 (current analysis until 2018–2022 arrive)
+
+`config_available.yaml`: train on 2016, 2017 and 80% of 2023; tune on the other 20% of 2023; test on 2024. Main-design sample sizes (teacher 3,000,000; students 1,000,000; 5-fold cross-fitting; 200 bootstrap replicates), except 200,000 test births per state and per-state students for 8 states (the 6 highest-missingness states plus the median and lowest; pooled students cover all 51). Outputs in `paper/available/`. Run with `bash tests/run_available.sh` (restartable).
+
+Added: bootstrap CIs and paired differences on records with naturally missing items (`natural_missingness_bootstrap.csv`); this analysis now appears in the Results text. Training resumes from saved models after an interruption, with a separate random stream per step so resumed runs reproduce uninterrupted ones.
+
+Gap in the training years (2018–2022 missing) is a limitation of this design, not a choice; when the files arrive, the main design (`config.yaml`) supersedes it.

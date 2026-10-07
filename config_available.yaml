@@ -1,16 +1,21 @@
+# AVAILABLE-DATA design: every natality year on hand (2016, 2017, 2023 for training; 2024 test).
+# Run with MAKD_CONFIG=config_available.yaml. Differences from config.yaml are marked AVAILABLE.
 # MAKD-Natality configuration. Every modeling decision lives here, not in code.
 # Items tagged VERIFY are provisional and must be ruled on by the author (docs/VERIFY_CHECKLIST.md).
 
 paths:
   raw: data/raw
   wonder: data/wonder
-  processed: data/processed
-  models: data/processed/models
-  paper: paper
+  processed: data/processed_avail
+  models: data/processed_avail/models
+  paper: paper/available
 
 years:
-  train: [2016, 2017, 2018, 2019, 2020, 2021, 2022]
+  # AVAILABLE: 2018-2022 not yet downloaded. Train on 2016, 2017 and 80% of 2023; tune on the
+  # other 20% of 2023 (fixed per-year random split); test on 2024, as in the main design.
+  train: [2016, 2017, 2023]
   tune: [2023]
+  holdout_frac: 0.2
   test: [2024]
 
 source:
@@ -97,6 +102,8 @@ masks:
   mechanisms:
     - {name: MCAR, beta: 0.0, rho: 0.0}
     - {name: MAR,  beta: 1.0, rho: 0.5}     # VERIFY (V4, V5)
+    # Stress arm (V11, author's call): every state's real rates x5, capped at 95%.
+    - {name: MARx5, beta: 1.0, rho: 0.5, rate_multiplier: 5}
   # MAR score: weights on always-observed covariates (standardized after weighting). VERIFY (V4)
   mar_weights: {teen: 1.0, unmarried: 1.0, foreign_born: 0.5, nh_white: -0.5, high_parity: 0.5}
   seed: 20261003
@@ -120,10 +127,13 @@ models:
     alpha: 0.3                  # weight on hard label
     tau: 1.0                    # temperature on teacher logit; tau=1 keeps targets calibrated
   per_state_students: true
+  # AVAILABLE: own students for the 6 highest-missingness states plus the median and lowest
+  # state (all 51 would take ~12 h on 2 cores; run all on the HPC)
+  student_states: {auto: 6}
   iterative_imputer_n: 200000
 
 evaluation:
-  eval_n: 400000                # test-year records evaluated per state (fixed sample, stratified)
+  eval_n: 200000                # AVAILABLE (main: 400,000) test-year records per state
   alert_rate: 0.10              # VERIFY (V7)
   teacher_sensitivity_target: 0.80
   bootstrap_B: 200
@@ -135,4 +145,4 @@ evaluation:
   recalibrate_on_tune: true     # also report logistic-recalibrated versions (secondary)
 
 final: false                    # true removes DRAFT stamps (only after verification gate)
-run_label: main                # pilot | available | main: sets banners and stamps
+run_label: available                # pilot | available | main: sets banners and stamps

@@ -125,3 +125,32 @@ Paired bootstrap, distilled minus non-distilled state student (95% CI):
 | PTB       | B4_logistic_pooled |         0.652 |           0.654 |          0.655 |             0.292 |               0.295 |              0.295 |
 | PTB       | KD_pooled          |         0.686 |           0.686 |          0.684 |             0.31  |               0.31  |              0.308 |
 
+### Paired bootstrap on naturally incomplete records
+
+| outcome   | trained_under   | comparison                                  | AUROC diff, 95% CI   | PPV@10% diff, 95% CI (pts)   |
+|:----------|:----------------|:--------------------------------------------|:---------------------|:-----------------------------|
+| LBW       | MCAR            | distilled (pooled) minus B1_teacher_meanimp | +0.0040 to +0.0069   | -0.08 to +0.57               |
+| LBW       | MCAR            | distilled (pooled) minus B2_teacher_iterimp | +0.0116 to +0.0159   | +0.61 to +1.58               |
+| LBW       | MCAR            | distilled (pooled) minus B3_pooled          | +0.0010 to +0.0030   | -0.00 to +0.79               |
+| LBW       | MCAR            | distilled (pooled) minus B4_logistic_pooled | +0.0257 to +0.0321   | +1.18 to +2.39               |
+| LBW       | MAR             | distilled (pooled) minus B1_teacher_meanimp | +0.0053 to +0.0086   | -0.02 to +0.78               |
+| LBW       | MAR             | distilled (pooled) minus B2_teacher_iterimp | +0.0130 to +0.0173   | +0.75 to +1.71               |
+| LBW       | MAR             | distilled (pooled) minus B3_pooled          | +0.0006 to +0.0026   | +0.30 to +1.02               |
+| LBW       | MAR             | distilled (pooled) minus B4_logistic_pooled | +0.0271 to +0.0337   | +1.14 to +2.58               |
+| LBW       | MARx5           | distilled (pooled) minus B1_teacher_meanimp | +0.0039 to +0.0071   | +0.00 to +0.66               |
+| LBW       | MARx5           | distilled (pooled) minus B2_teacher_iterimp | +0.0118 to +0.0158   | +0.74 to +1.59               |
+| LBW       | MARx5           | distilled (pooled) minus B3_pooled          | +0.0027 to +0.0044   | -0.12 to +0.62               |
+| LBW       | MARx5           | distilled (pooled) minus B4_logistic_pooled | +0.0286 to +0.0354   | +1.38 to +2.69               |
+| PTB       | MCAR            | distilled (pooled) minus B1_teacher_meanimp | +0.0077 to +0.0100   | -0.56 to +0.09               |
+| PTB       | MCAR            | distilled (pooled) minus B2_teacher_iterimp | +0.0146 to +0.0176   | +0.25 to +0.96               |
+| PTB       | MCAR            | distilled (pooled) minus B3_pooled          | +0.0035 to +0.0056   | -0.22 to +0.34               |
+| PTB       | MCAR            | distilled (pooled) minus B4_logistic_pooled | +0.0256 to +0.0333   | +0.77 to +1.83               |
+| PTB       | MAR             | distilled (pooled) minus B1_teacher_meanimp | +0.0087 to +0.0114   | -0.27 to +0.39               |
+| PTB       | MAR             | distilled (pooled) minus B2_teacher_iterimp | +0.0157 to +0.0189   | +0.56 to +1.23               |
+| PTB       | MAR             | distilled (pooled) minus B3_pooled          | +0.0012 to +0.0039   | -0.41 to +0.23               |
+| PTB       | MAR             | distilled (pooled) minus B4_logistic_pooled | +0.0295 to +0.0367   | +1.26 to +2.49               |
+| PTB       | MARx5           | distilled (pooled) minus B1_teacher_meanimp | +0.0089 to +0.0115   | -0.30 to +0.38               |
+| PTB       | MARx5           | distilled (pooled) minus B2_teacher_iterimp | +0.0155 to +0.0188   | +0.60 to +1.27               |
+| PTB       | MARx5           | distilled (pooled) minus B3_pooled          | +0.0030 to +0.0046   | -0.27 to +0.28               |
+| PTB       | MARx5           | distilled (pooled) minus B4_logistic_pooled | +0.0273 to +0.0350   | +1.05 to +2.11               |
+

@@ -46,6 +46,10 @@ Each model was evaluated in 100,000 test-year births under each state's mask. Th
 
 **PTB, MCAR.** Full-information teacher: median AUROC across states 0.669, PPV at 10% alert 22.8%. State-distilled student: AUROC 0.667 (range 0.666–0.668); PPV gap -0.1 points; sensitivity gap +0.1 points; median ICI 0.49. Non-distilled state model: AUROC 0.665 (range 0.663–0.666); PPV gap -0.2 points; sensitivity gap -0.3 points; median ICI 0.52. Teacher with iterative imputation: AUROC 0.667 (range 0.665–0.668); PPV gap 0.0 points; sensitivity gap 0.0 points; median ICI 0.44. Teacher with mean imputation: AUROC 0.668 (range 0.666–0.669); PPV gap -0.1 points; sensitivity gap -0.1 points; median ICI 0.44. The distilled student had higher PPV than the non-distilled model in 7 of 8 states and lower ICI in 6.
 
+**LBW, records with naturally missing items** (n = 100,000; 9,303 events; models trained under MAR masks). The pooled distilled student had AUROC 0.686 and PPV 24.5% at the 10% alert threshold. Paired bootstrap 95% intervals: versus teacher with mean imputation, AUROC difference +0.005 to +0.009 and PPV difference -0.02 to +0.78 points; versus teacher with iterative imputation, AUROC difference +0.013 to +0.017 and PPV difference +0.75 to +1.71 points; versus the same learner without distillation, AUROC difference +0.001 to +0.003 and PPV difference +0.30 to +1.02 points.
+
+**PTB, records with naturally missing items** (n = 100,000; 11,710 events; models trained under MAR masks). The pooled distilled student had AUROC 0.686 and PPV 31.0% at the 10% alert threshold. Paired bootstrap 95% intervals: versus teacher with mean imputation, AUROC difference +0.009 to +0.011 and PPV difference -0.27 to +0.39 points; versus teacher with iterative imputation, AUROC difference +0.016 to +0.019 and PPV difference +0.56 to +1.23 points; versus the same learner without distillation, AUROC difference +0.001 to +0.004 and PPV difference -0.41 to +0.23 points.
+
 Figure 1. State item missingness (2024). Figure 2. Gap to teacher in PPV and sensitivity at the 10% alert rate. Figure 3. Calibration (ICI). Figure 4. Subgroup PPV.
 
 ## 4. Discussion

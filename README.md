@@ -1,4 +1,4 @@
-**Status: DRAFT v0.2.0 (2026-10-07). Real data verified (2023–2024 files match NVSR totals exactly; WONDER reconciles within 0.01 pt). Pilot run on real 2023→2024 data in `paper/pilot/`; main 2016–2024 run pending. Not for citation.**
+**Status: DRAFT v0.3.0 (2026-10-07). Real data verified (2016, 2017, 2023, 2024 files match NVSR totals exactly; WONDER reconciles within 0.01 pt). Current analysis: available-data design (train 2016, 2017, 2023; test 2024) in `paper/available/`; pilot in `paper/pilot/`; main 2016–2022 design pending the remaining downloads. Not for citation.**
 
 # MAKD-Natality
 
@@ -30,6 +30,8 @@ python code/09_summary.py         # paper/summary.md: headline comparisons from 
 ```
 
 Every modeling decision is in `config.yaml`. Items marked VERIFY are provisional.
+
+Available-data design (2016, 2017, 2023 → 2024): `bash tests/run_available.sh` (restartable; ~4–5 h on 2 cores).
 
 Pilot on the 2023–2024 files only: prefix the 02–09 commands with `MAKD_CONFIG=config_pilot.yaml`. Results: `paper/pilot/summary.md`, figures in `paper/pilot/figures/` (about 40 min training + 60 min evaluation on 2 cores).
 

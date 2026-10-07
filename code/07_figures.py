@@ -196,7 +196,7 @@ def main():
     final = cfg["final"] or "--final" in sys.argv
     syn = bool(__import__("os").environ.get("MAKD_SMOKE"))
     global PILOT
-    PILOT = set(cfg["years"]["train"]) & set(cfg["years"]["tune"]) != set()
+    PILOT = cfg.get("run_label", "main") == "pilot"
     style()
     tabs, figs = cfg["paths"]["paper"] / "tables", cfg["paths"]["paper"] / "figures"
     figs.mkdir(parents=True, exist_ok=True)

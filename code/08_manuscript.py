@@ -32,6 +32,41 @@ def lookup(d, dotted):
     return d
 
 
+def years_text(y):
+    """'2016-2022' when contiguous; otherwise a list, marking a year split with the tune set."""
+    tr, shared = y["train"], set(y["train"]) & set(y["tune"])
+    pct = int(round(100 * y.get("holdout_frac", 0.2)))
+    names = [f"{t} ({100 - pct}% of records)" if t in shared else str(t) for t in tr]
+    if not shared and tr == list(range(tr[0], tr[-1] + 1)) and len(tr) > 1:
+        return f"{tr[0]}–{tr[-1]}"
+    return names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
+
+
+def natural_paragraph(stats):
+    nat = stats.get("natural", {})
+    out = []
+    for o, by in nat.items():
+        e = by.get("MAR") or next(iter(by.values()))
+        kd, d = e["models"].get("KD_pooled"), e["diffs"]
+        if not kd:
+            continue
+        ci = lambda k, met, sc=1, nd=3: f"{sc * d[k][met][0]:+.{nd}f} to {sc * d[k][met][1]:+.{nd}f}"  # noqa: E731
+        s = (f"**{o}, records with naturally missing items** (n = {kd['n']:,}; {kd['events']:,} events; models "
+             f"trained under MAR masks). The pooled distilled student had AUROC {kd['auroc']:.3f} and PPV "
+             f"{100 * kd['ppv_alert']:.1f}% at the 10% alert threshold.")
+        parts = []
+        for k, lab in [("B1_teacher_meanimp", "teacher with mean imputation"),
+                       ("B2_teacher_iterimp", "teacher with iterative imputation"),
+                       ("B3_pooled", "the same learner without distillation")]:
+            if k in d:
+                parts.append(f"versus {lab}, AUROC difference {ci(k, 'auroc')} and PPV difference "
+                             f"{ci(k, 'ppv_alert', 100, 2)} points")
+        if parts:
+            s += " Paired bootstrap 95% intervals: " + "; ".join(parts) + "."
+        out.append(s)
+    return "\n\n".join(out)
+
+
 def results_paragraphs(stats):
     out = []
     for o, od in stats["outcomes"].items():
@@ -55,7 +90,8 @@ def results_paragraphs(stats):
                              f"{c['states_kd_higher_ppv_alert']} of {c['n_states']} states and lower ICI "
                              f"in {c['states_kd_lower_ici']}.")
             out.append(" ".join(parts))
-    return "\n\n".join(out)
+    nat = natural_paragraph(stats)
+    return "\n\n".join(out + ([nat] if nat else []))
 
 
 def main():
@@ -69,15 +105,20 @@ def main():
                    + ("from SYNTHETIC test data and are meaningless.**" if stats.get("synthetic")
                       else "from the PILOT run (train 80% of 2023, tune 20% of 2023, test 2024; reduced "
                            "samples). Feasibility only: do not quote. The main design trains on 2016-2022.**"
-                      if stats.get("pilot")
+                      if stats.get("run_label") == "pilot"
+                      else "from the AVAILABLE-DATA design (train " + years_text(y) + "; test "
+                           + str(y["test"][0]) + "). Unverified until the author completes "
+                           "docs/VERIFY_CHECKLIST.md.**"
+                      if stats.get("run_label") == "available"
                       else "unverified until the author completes docs/VERIFY_CHECKLIST.md.**")),
         "author_block": "\n".join(f"{a['name']}, {a['affiliation']}. ORCID {a['orcid']}. {a['email']}"
                                   for a in authors),
-        "years_span": f"{y['train'][0]}–{y['test'][-1]}",
-        "train_years": (f"{y['train'][0]}–{y['train'][-1]}" if not stats.get("pilot")
-                        else f"{y['train'][0]} ({100 - int(100 * y.get('holdout_frac', 0.2))}% of records)"),
-        "tune_year": (str(y["tune"][0]) if not stats.get("pilot")
-                      else f"{y['tune'][0]} (held-out {int(100 * y.get('holdout_frac', 0.2))}%)"),
+        "years_span": (f"{min(y['train'])}–{y['test'][-1]}"
+                       if list(range(min(y["train"]), y["test"][-1] + 1)) == sorted(set(y["train"] + y["tune"] + y["test"]))
+                       else ", ".join(str(v) for v in sorted(set(y["train"] + y["tune"] + y["test"])))),
+        "train_years": years_text(y),
+        "tune_year": (str(y["tune"][0]) if not set(y["train"]) & set(y["tune"])
+                      else f"{y['tune'][0]} (held-out {int(round(100 * y.get('holdout_frac', 0.2)))}%)"),
         "test_year": str(y["test"][0]), "K": str(cfg["models"]["crossfit_folds"]),
         "alpha": str(cfg["models"]["kd"]["alpha"]), "tau": str(cfg["models"]["kd"]["tau"]),
         "B": str(cfg["evaluation"]["bootstrap_B"]), "n_states": str(stats["n_states"]),
