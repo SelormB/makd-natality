@@ -1,4 +1,4 @@
-**Status: DRAFT v0.3.0 (2026-10-07). Real data verified (2016, 2017, 2023, 2024 files match NVSR totals exactly; WONDER reconciles within 0.01 pt). Current analysis: available-data design (train 2016, 2017, 2023; test 2024) in `paper/available/`; pilot in `paper/pilot/`; main 2016–2022 design pending the remaining downloads. Not for citation.**
+**Status: DRAFT v0.4.0 (2026-10-07). Available-data results complete in `paper/available/`. Record layout verified against all nine User Guides (2016–2024). Real data verified (2016, 2017, 2023, 2024 files match NVSR totals exactly; WONDER reconciles within 0.01 pt). Current analysis: available-data design (train 2016, 2017, 2023; test 2024) in `paper/available/`; pilot in `paper/pilot/`; main 2016–2022 design pending the remaining downloads. Not for citation.**
 
 # MAKD-Natality
 
