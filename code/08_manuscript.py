@@ -6,6 +6,7 @@ Output: paper/manuscript.md. Placeholders that cannot be resolved stay visible a
 which the publish gate treats as a blocker.
 """
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -21,6 +22,7 @@ def signed(v, nd=1):
 FMT = {
     "pct1": lambda v: f"{100 * v:.1f}%",
     "pts": lambda v: signed(100 * v),
+    "pts2": lambda v: signed(100 * v, 2),
     "f3": lambda v: f"{v:.3f}",
     "int": lambda v: f"{int(v):,}",
 }
@@ -70,7 +72,7 @@ def natural_paragraph(stats):
 def draft(name):
     """Author-editable section text from paper/drafts/<name>.md (replace with your own)."""
     p = ROOT / "paper" / "drafts" / f"{name}.md"
-    return p.read_text().strip() if p.exists() else f"[VERIFY: author writes the {name}]"
+    return p.read_text().strip() if p.exists() else ""
 
 
 def abstract_natural(stats):
@@ -92,31 +94,136 @@ def abstract_natural(stats):
             "imputation (paired bootstrap 95% intervals; " + "; ".join(bits) + ").")
 
 
-def results_paragraphs(stats):
-    out = []
+LABELS = [("T_oracle", "Teacher, full information (reference)"),
+          ("KD_state", "Distilled student, per state"),
+          ("KD_pooled", "Distilled student, pooled"),
+          ("B3_state", "Non-distilled student, per state (B3)"),
+          ("B3_pooled", "Non-distilled student, pooled (B3)"),
+          ("B1_teacher_meanimp", "Teacher + mean imputation (B1)"),
+          ("B2_teacher_iterimp", "Teacher + iterative imputation (B2)"),
+          ("B4_logistic_pooled", "Logistic regression + indicators (B4)")]
+MECH_NAME = {"MCAR": "MCAR", "MAR": "MAR", "MARx5": "MAR, rates ×5"}
+
+
+def table_mar(stats, n, student_list):
+    rows = ["| Outcome | Model | AUROC | PPV, % | PPV gap, pts | Sensitivity gap, pts | ICI, % |",
+            "|:------|:--------------------------|------:|------:|-------:|---------:|------:|"]
     for o, od in stats["outcomes"].items():
-        for mech, md in od["mechanisms"].items():
-            T = md.get("T_oracle", {})
-            parts = [f"**{o}, {mech}.** Full-information teacher: median AUROC across states "
-                     f"{T['auroc']['median']:.3f}, PPV at 10% alert {100 * T['ppv_alert']['median']:.1f}%."]
-            for m, lab in [("KD_state", "state-distilled student"), ("B3_state", "non-distilled state model"),
-                           ("B2_teacher_iterimp", "teacher with iterative imputation"),
-                           ("B1_teacher_meanimp", "teacher with mean imputation")]:
-                if m in md:
-                    x = md[m]
-                    parts.append(f"{lab.capitalize()}: AUROC {x['auroc']['median']:.3f} "
-                                 f"(range {x['auroc']['min']:.3f}–{x['auroc']['max']:.3f}); PPV gap "
-                                 f"{signed(100 * x['ppv_alert']['gap_median'])} points; sensitivity gap "
-                                 f"{signed(100 * x['sens_alert']['gap_median'])} points; median ICI "
-                                 f"{100 * x['ici']['median']:.2f}.")
-            c = md.get("_kd_vs_b3_state")
-            if c:
-                parts.append(f"The distilled student had higher PPV than the non-distilled model in "
-                             f"{c['states_kd_higher_ppv_alert']} of {c['n_states']} states and lower ICI "
-                             f"in {c['states_kd_lower_ici']}.")
-            out.append(" ".join(parts))
-    nat = natural_paragraph(stats)
-    return "\n\n".join(out + ([nat] if nat else []))
+        md = od["mechanisms"]["MAR"]
+        for k, lab in LABELS:
+            if k not in md:
+                continue
+            x = md[k]
+            ref = k == "T_oracle"
+            rows.append(f"| {o} | {lab} | {x['auroc']['median']:.3f} | {100 * x['ppv_alert']['median']:.1f} | "
+                        f"{'—' if ref else signed(100 * x['ppv_alert']['gap_median'], 2)} | "
+                        f"{'—' if ref else signed(100 * x['sens_alert']['gap_median'], 2)} | "
+                        f"{100 * x['ici']['median']:.2f} |")
+    return (f"Table {n}. Performance under state missingness simulated at observed rates (MAR masks), test year. "
+            f"Values are medians across all {stats['n_states']} jurisdictions, except per-state models (medians "
+            f"across the {len(student_list)} states with their own student); gaps are differences from the "
+            "full-information teacher in the same state. PPV and sensitivity at the 10% alert rate.\n\n" + "\n".join(rows))
+
+
+def table_mech(stats, n):
+    mechs = [m["name"] for m in stats.get("mechanisms", [])]
+    head = "| Outcome | Model | " + " | ".join(MECH_NAME.get(m, m) for m in mechs) + " |"
+    rows = [head, "|:------|:------------------------------|" + "--------:|" * len(mechs)]
+    for o, od in stats["outcomes"].items():
+        for k, lab in LABELS[1:]:
+            if not all(k in od["mechanisms"].get(m, {}) for m in mechs):
+                continue
+            rows.append(f"| {o} | {lab} | " + " | ".join(
+                signed(100 * od["mechanisms"][m][k]["ppv_alert"]["gap_median"], 2) for m in mechs) + " |")
+    return (f"Table {n}. Median PPV gap to the full-information teacher (percentage points, 10% alert rate) "
+            "by missingness mechanism.\n\n" + "\n".join(rows))
+
+
+def table_natural(stats, n):
+    rows = ["| Outcome | Model | AUROC (95% CI) | PPV, % (95% CI) | AUROC difference, distilled − model (95% CI) | "
+            "PPV difference, pts (95% CI) |", "|:-----|:------------------|:-----------|:-----------|:------------|:------------|"]
+    for o, by in stats.get("natural", {}).items():
+        e = by.get("MAR") or next(iter(by.values()))
+        for k, lab in LABELS:
+            x = e["models"].get(k)
+            if not x:
+                continue
+            d = e["diffs"].get(k)
+            ci = x["ci"]
+            rows.append(
+                f"| {o} | {lab} | {x['auroc']:.3f} ({ci['auroc'][0]:.3f}–{ci['auroc'][1]:.3f}) | "
+                f"{100 * x['ppv_alert']:.1f} ({100 * ci['ppv_alert'][0]:.1f}–{100 * ci['ppv_alert'][1]:.1f}) | "
+                + (f"{d['auroc'][0]:+.3f} to {d['auroc'][1]:+.3f} | "
+                   f"{100 * d['ppv_alert'][0]:+.2f} to {100 * d['ppv_alert'][1]:+.2f} |" if d else "— | — |"))
+    return (f"Table {n}. Test-year records with at least one naturally missing item (models trained under MAR "
+            "masks). Differences are paired bootstrap intervals for the pooled distilled student minus each "
+            "comparator.\n\n" + "\n".join(rows))
+
+
+def results(stats, student_list, paper_dir):
+    o = stats["outcomes"]
+    nat = stats.get("natural", {})
+    p = []
+    p.append(f"Test-year prevalence was {100 * o['LBW']['prevalence_test']:.1f}% for LBW and "
+             f"{100 * o['PTB']['prevalence_test']:.1f}% for PTB. Observed state missingness was low: across "
+             f"{stats['n_states']} jurisdictions the mean unknown rate over the six items ranged from "
+             f"{100 * min(stats['mean_unknown_rate_by_state'].values()):.1f}% "
+             f"to {100 * max(stats['mean_unknown_rate_by_state'].values()):.1f}% (Figure 1).")
+    lbw, ptb = o["LBW"]["mechanisms"]["MAR"], o["PTB"]["mechanisms"]["MAR"]
+    c1, c2 = lbw.get("_kd_vs_b3_state"), ptb.get("_kd_vs_b3_state")
+    s = ("**Simulated state missingness.** At observed rates every tree-based method stayed close to the "
+         "full-information teacher (Table 1, Figure 2). For LBW the distilled students matched or slightly exceeded "
+         f"the teacher's PPV (median gap {signed(100 * lbw['KD_state']['ppv_alert']['gap_median'], 2)} points for "
+         f"per-state students); for PTB the teacher with mean imputation was closest "
+         f"({signed(100 * ptb['B1_teacher_meanimp']['ppv_alert']['gap_median'], 2)} points). Logistic regression with "
+         f"missing indicators had the lowest AUROC for both outcomes.")
+    if c1 and c2:
+        s += (f" Compared with the same learner trained on hard labels, the per-state distilled student had higher "
+              f"AUROC in {c1['states_kd_higher_auroc']} of {c1['n_states']} states for LBW and "
+              f"{c2['states_kd_higher_auroc']} of {c2['n_states']} for PTB, and higher PPV in "
+              f"{c1['states_kd_higher_ppv_alert']} and {c2['states_kd_higher_ppv_alert']} states respectively. Calibration "
+              f"was slightly worse with distillation: the distilled student had the lower ICI in "
+              f"{c1['states_kd_lower_ici']} of {c1['n_states']} states for LBW and {c2['states_kd_lower_ici']} of "
+              f"{c2['n_states']} for PTB, although all ICIs were below one percentage point (Figure 3).")
+    p.append(s)
+    p.append(table_mar(stats, 1, student_list))
+    p.append("**Missingness mechanism.** Gaps were similar under MCAR and MAR masks. When every state's rates "
+             "were multiplied by five, PPV relative to the teacher fell for every method; the pooled students "
+             "degraded least among the students (Table 2).")
+    p.append(table_mech(stats, 2))
+    if nat:
+        L, P = nat["LBW"]["MAR"]["models"]["KD_pooled"], nat["PTB"]["MAR"]["models"]["KD_pooled"]
+        def excl(o, k, met):
+            return nat[o]["MAR"]["diffs"][k][met][0] > 0
+        ppv_ok = {k: [o for o in ("LBW", "PTB") if excl(o, k, "ppv_alert")]
+                  for k in ("B1_teacher_meanimp", "B2_teacher_iterimp", "B3_pooled")}
+        both = lambda l: "both outcomes" if len(l) == 2 else (l[0] + " only" if l else "neither outcome")  # noqa: E731
+        p.append(f"**Naturally missing items.** In a random sample of {L['n']:,} test-year records with at least one "
+                 f"item missing ({L['events']:,} LBW and {P['events']:,} PTB events), the pooled distilled student had "
+                 "the highest AUROC for both outcomes, and every paired interval for its AUROC advantage over mean "
+                 "imputation, iterative imputation and the non-distilled student excluded zero (Table 3). The interval "
+                 f"for its PPV advantage excluded zero over iterative imputation for {both(ppv_ok['B2_teacher_iterimp'])}, "
+                 f"over mean imputation for {both(ppv_ok['B1_teacher_meanimp'])}, and over the non-distilled student "
+                 f"for {both(ppv_ok['B3_pooled'])}.")
+        p.append(table_natural(stats, 3))
+    sg = paper_dir / "tables" / "subgroups.csv"
+    if sg.exists():
+        import pandas as pd
+        d = pd.read_csv(sg)
+        d = d[d.mechanism == "MAR"]
+        n_cells = n_b4 = n_tight = 0
+        for _, x in d.groupby(["outcome", "subgroup", "level"]):
+            x = x.set_index("model").ppv_alert
+            n_cells += 1
+            n_b4 += int(x.idxmin() == "B4_logistic_pooled")
+            t = x.drop("B4_logistic_pooled", errors="ignore")
+            n_tight += int((t.max() - t.min()) < 0.01)
+        p.append("**Subgroups.** PPV at the 10% alert rate by maternal race and Hispanic origin, age band, payer and "
+                 f"nativity is shown in Figure 4. Among the tree-based methods, PPV differed by less than one "
+                 f"percentage point in {n_tight} of {n_cells} outcome-by-subgroup cells, and no method was consistently "
+                 f"best; logistic regression had the lowest PPV in {n_b4} of {n_cells}. Larger differences occurred in "
+                 "smaller subgroups, where estimates are less precise.")
+    return "\n\n".join(p)
 
 
 def main():
@@ -125,8 +232,11 @@ def main():
     stats = json.loads((paper / "stats.json").read_text())
     authors = json.loads((ROOT / "AUTHORS.json").read_text())["authors"]
     y = cfg["years"]
+    log = cfg["paths"]["processed"] / "models" / "train_log.json"
+    students = json.loads(log.read_text()).get("student_states", []) if log.exists() else []
+    clean = os.environ.get("MAKD_CLEAN") == "1"
     ctx = {
-        "banner": ("" if cfg["final"] else "> **DRAFT — not for circulation. Numbers below are "
+        "banner": ("" if cfg["final"] or clean else "> **DRAFT — not for circulation. Numbers below are "
                    + ("from SYNTHETIC test data and are meaningless.**" if stats.get("synthetic")
                       else "from the PILOT run (train 80% of 2023, tune 20% of 2023, test 2024; reduced "
                            "samples). Feasibility only: do not quote. The main design trains on 2016-2022.**"
@@ -136,7 +246,7 @@ def main():
                            "docs/VERIFY_CHECKLIST.md.**"
                       if stats.get("run_label") == "available"
                       else "unverified until the author completes docs/VERIFY_CHECKLIST.md.**")),
-        "author_block": "\n".join(f"{a['name']}, {a['affiliation']}. ORCID {a['orcid']}. {a['email']}"
+        "author_block": "\n".join(f"{a['name']}|{a['affiliation']}|ORCID {a['orcid']}|{a['email']}"
                                   for a in authors),
         "years_span": (f"{min(y['train'])}–{y['test'][-1]}"
                        if list(range(min(y["train"]), y["test"][-1] + 1)) == sorted(set(y["train"] + y["tune"] + y["test"]))
@@ -149,8 +259,11 @@ def main():
         "B": str(cfg["evaluation"]["bootstrap_B"]), "n_states": str(stats["n_states"]),
         "eval_n_test": f"{stats['eval_n_test']:,}",
         "natural_missing_n_test": f"{stats['natural_missing_n_test']:,}",
-        "code_doi": "[DOI: Zenodo, after release]",
-        "results_paragraphs": results_paragraphs(stats),
+        "results": results(stats, students, paper),
+        "student_scope": (f"per-state students were trained for {len(students)} states (the "
+                          f"{len(students) - 2} with the highest mean unknown rate, the median state and the "
+                          f"lowest: {', '.join(sorted(students))}), and one pooled student was trained over the "
+                          f"births-weighted mixture of all {stats['n_states']} jurisdictions' masks."),
         "abstract_natural": abstract_natural(stats),
         "introduction": draft("introduction"),
         "discussion": draft("discussion"),

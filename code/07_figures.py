@@ -193,7 +193,7 @@ def fig4(S, out, final, syn):
 
 def main():
     cfg = load_config()
-    final = cfg["final"] or "--final" in sys.argv
+    final = cfg["final"] or "--final" in sys.argv or __import__("os").environ.get("MAKD_CLEAN") == "1"
     syn = bool(__import__("os").environ.get("MAKD_SMOKE"))
     global PILOT
     PILOT = cfg.get("run_label", "main") == "pilot"

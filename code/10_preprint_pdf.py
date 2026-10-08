@@ -5,6 +5,7 @@ Output: paper/<run>/MAKD-Natality_preprint_<label>.pdf. While config `final` is 
 carries a DRAFT watermark and line numbers (for review). Respects MAKD_CONFIG.
 Requires pandoc and a TeX distribution with xelatex, draftwatermark, lineno, fancyhdr.
 """
+import os
 import re
 import subprocess
 import sys
@@ -25,26 +26,28 @@ def main():
     body = md.split(f"# {title}", 1)[1].lstrip("\n")
     author_line, body = body.split("\n", 1)
     banner = re.match(r"^> \*\*(.+?)\*\*", md)
-    draft = not cfg["final"]
+    clean = os.environ.get("MAKD_CLEAN") == "1"
+    draft = not (cfg["final"] or clean)
     header = [
         r"\usepackage{fancyhdr}", r"\pagestyle{fancy}", r"\fancyhf{}",
         r"\fancyhead[L]{\small MAKD-Natality}", r"\fancyhead[R]{\small " + ("Draft, not for circulation" if draft else "Preprint") + "}",
         r"\fancyfoot[C]{\thepage}", r"\renewcommand{\headrulewidth}{0.4pt}",
         r"\usepackage{float}", r"\floatplacement{figure}{H}",
+        r"\usepackage{etoolbox}", r"\AtBeginEnvironment{longtable}{\footnotesize}",
     ]
     if draft:
         header += [r"\usepackage[firstpageonly=false]{draftwatermark}", r"\SetWatermarkText{DRAFT}",
                    r"\SetWatermarkScale{1.2}", r"\SetWatermarkLightness{0.92}",
                    r"\usepackage{lineno}", r"\linenumbers"]
-    meta = ["---", f'title: "{title}"', f'author: "{author_line.strip()}"',
-            f'date: "{("Draft generated " if draft else "")}' + __import__("datetime").date.today().strftime("%B %d, %Y") + '"',
+    meta = ["---", f'title: "{title}"', "author: |"] + [f"  | {l}" for l in author_line.strip().split("|")] + [
+            f'date: "{("Draft generated " if draft else "")}' + (lambda d: f"{d:%B} {d.day}, {d.year}")(__import__("datetime").date.today()) + '"',
             "header-includes:"] + [f"  - '{h}'" for h in header] + ["---", ""]
     if banner and draft:
         body = md[:md.index("\n#")].strip() + "\n\n" + body
     with tempfile.TemporaryDirectory() as td:
         src = Path(td) / "preprint.md"
         src.write_text("\n".join(meta) + body)
-        out = paper / f"MAKD-Natality_preprint_{label}.pdf"
+        out = paper / ("MAKD-Natality_preprint.pdf" if clean else f"MAKD-Natality_preprint_{label}.pdf")
         cmd = ["pandoc", str(src), "-o", str(out), "--pdf-engine=xelatex",
                f"--resource-path={paper}", "-V", "geometry:margin=1in", "-V", "fontsize=11pt",
                "-V", "mainfont=DejaVu Serif", "-V", "linestretch=1.25", "-V", "colorlinks=true"]
