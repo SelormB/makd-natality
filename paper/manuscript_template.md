@@ -10,11 +10,13 @@
 
 **Methods.** We used NCHS public-use natality files for {{years_span}} and CDC WONDER state-level item-completeness counts. A teacher model was trained on records complete for all six items; students were distilled to operate under each of {{n_states}} jurisdictions' observed missingness, simulated under MCAR and covariate-dependent MAR mechanisms. We compared students with imputation and non-distilled baselines on sensitivity and positive predictive value (PPV) at a 10% alert rate, calibration, and subgroup performance in the {{test_year}} births.
 
-**Results.** Test-year prevalence was {{outcomes.LBW.prevalence_test|pct1}} for low birthweight (LBW) and {{outcomes.PTB.prevalence_test|pct1}} for preterm birth (PTB). Under MAR missingness, the median across states of the PPV gap to the full-information teacher was {{outcomes.LBW.mechanisms.MAR.KD_state.ppv_alert.gap_median|pts}} points for the state-distilled student versus {{outcomes.LBW.mechanisms.MAR.B3_state.ppv_alert.gap_median|pts}} for the same model trained without distillation (LBW), and {{outcomes.PTB.mechanisms.MAR.KD_state.ppv_alert.gap_median|pts}} versus {{outcomes.PTB.mechanisms.MAR.B3_state.ppv_alert.gap_median|pts}} (PTB). [VERIFY: author states the conclusion the numbers support, including if it is null]
+**Results.** Test-year prevalence was {{outcomes.LBW.prevalence_test|pct1}} for low birthweight (LBW) and {{outcomes.PTB.prevalence_test|pct1}} for preterm birth (PTB). Under MAR missingness, the median across states of the PPV gap to the full-information teacher was {{outcomes.LBW.mechanisms.MAR.KD_state.ppv_alert.gap_median|pts}} points for the state-distilled student versus {{outcomes.LBW.mechanisms.MAR.B3_state.ppv_alert.gap_median|pts}} for the same model trained without distillation (LBW), and {{outcomes.PTB.mechanisms.MAR.KD_state.ppv_alert.gap_median|pts}} versus {{outcomes.PTB.mechanisms.MAR.B3_state.ppv_alert.gap_median|pts}} (PTB). {{abstract_natural}}
+
+**Conclusion.** Missingness-aware distillation performed comparably to imputation when state missingness was simulated at real rates, and better than imputation on records with naturally missing items. Evaluation on naturally incomplete records changed the conclusion. [Draft conclusion: author to confirm]
 
 ## 1. Introduction
 
-[VERIFY: author writes. Outline from docs/LITERATURE_TRIAGE.md: (1) state variation in item completeness; (2) deployment-time missingness in prediction (Hoogland 2020; Sisk 2023); (3) missingness shift (Zhou 2023); (4) generalized distillation (Lopez-Paz 2016); (5) gap and contribution; (6) extension of the Ghana neonatal work.]
+{{introduction}}
 
 ## 2. Methods
 
@@ -36,10 +38,16 @@ Each model was evaluated in {{eval_n_test}} test-year births under each state's 
 ## 3. Results
 {{results_paragraphs}}
 
-Figure 1. State item missingness ({{test_year}}). Figure 2. Gap to teacher in PPV and sensitivity at the 10% alert rate. Figure 3. Calibration (ICI). Figure 4. Subgroup PPV.
+![Births with each item unknown or not stated, by state ({{test_year}}, CDC WONDER). Bars mark the median state.](figures/fig1_state_missingness.png)
+
+![Gap to the full-information teacher in PPV (top) and sensitivity (bottom) at the 10% alert rate, by state, outcome and missingness mechanism.](figures/fig2_gap_to_teacher.png)
+
+![Calibration: integrated calibration index across states, by model.](figures/fig3_calibration_ici.png)
+
+![PPV at the 10% alert rate by subgroup under the births-weighted state mixture (MAR masks).](figures/fig4_subgroups_ppv.png)
 
 ## 4. Discussion
-[VERIFY: author writes after reading docs/LIMITATIONS.md, which this section may not outrun.]
+{{discussion}}
 
 ## Declarations
 **AI assistance.** Claude (Anthropic) assisted with code scaffolding, data-wrangling scripts, document formatting, and literature triage. The author made all modeling decisions, verified every number against pipeline output, and wrote the interpretation. [VERIFY: match target journal's AI policy wording]
@@ -47,3 +55,7 @@ Figure 1. State item missingness ({{test_year}}). Figure 2. Gap to teacher in PP
 **Data and code availability.** NCHS natality public-use files and CDC WONDER are publicly available; no microdata are redistributed. Code: {{code_doi}}.
 
 **Funding / conflicts.** [VERIFY]
+
+## References
+
+{{references}}

@@ -10,11 +10,21 @@ Selorm Buaka, University of Northern Colorado. ORCID 0009-0005-3991-4859. [VERIF
 
 **Methods.** We used NCHS public-use natality files for 2016, 2017, 2023, 2024 and CDC WONDER state-level item-completeness counts. A teacher model was trained on records complete for all six items; students were distilled to operate under each of 51 jurisdictions' observed missingness, simulated under MCAR and covariate-dependent MAR mechanisms. We compared students with imputation and non-distilled baselines on sensitivity and positive predictive value (PPV) at a 10% alert rate, calibration, and subgroup performance in the 2024 births.
 
-**Results.** Test-year prevalence was 6.9% for low birthweight (LBW) and 8.5% for preterm birth (PTB). Under MAR missingness, the median across states of the PPV gap to the full-information teacher was +0.1 points for the state-distilled student versus 0.0 for the same model trained without distillation (LBW), and -0.1 versus -0.2 (PTB). [VERIFY: author states the conclusion the numbers support, including if it is null]
+**Results.** Test-year prevalence was 6.9% for low birthweight (LBW) and 8.5% for preterm birth (PTB). Under MAR missingness, the median across states of the PPV gap to the full-information teacher was +0.1 points for the state-distilled student versus 0.0 for the same model trained without distillation (LBW), and -0.1 versus -0.2 (PTB). On real test-year records with naturally missing items, the pooled distilled student outperformed imputation (paired bootstrap 95% intervals; LBW: AUROC difference versus mean imputation +0.004 to +0.006, versus iterative imputation +0.013 to +0.016; PTB: AUROC difference versus mean imputation +0.009 to +0.011, versus iterative imputation +0.016 to +0.018).
+
+**Conclusion.** Missingness-aware distillation performed comparably to imputation when state missingness was simulated at real rates, and better than imputation on records with naturally missing items. Evaluation on naturally incomplete records changed the conclusion. [Draft conclusion: author to confirm]
 
 ## 1. Introduction
 
-[VERIFY: author writes. Outline from docs/LITERATURE_TRIAGE.md: (1) state variation in item completeness; (2) deployment-time missingness in prediction (Hoogland 2020; Sisk 2023); (3) missingness shift (Zhou 2023); (4) generalized distillation (Lopez-Paz 2016); (5) gap and contribution; (6) extension of the Ghana neonatal work.]
+*[Draft written with AI assistance from the author's study design and results. The author must rewrite it in their own voice and verify every citation before posting (VERIFY_CHECKLIST).]*
+
+Low birthweight and preterm birth remain leading contributors to neonatal morbidity and mortality in the United States, and risk models built on birth-certificate data are attractive because those data cover every registered birth. The variables that carry much of the antenatal signal, however (month prenatal care began, pre-pregnancy body mass index, WIC participation, smoking before pregnancy, maternal education and payer), are also the items most often left unknown on the certificate, and completeness for each item differs from one state to another. A model developed on records where these items are complete will be deployed in jurisdictions where they are not, and the size of that gap depends on where the model is used.
+
+The prediction literature has examined how to handle predictors that are missing at deployment. Hoogland and colleagues compared strategies for validating and applying a model to patients with missing predictor values [Hoogland 2020]; Sperrin and colleagues argued that missing data should be handled differently for prediction than for description or causal explanation, favoring approaches available at the moment of prediction [Sperrin 2020]; and Sisk and colleagues showed in simulation that imputation and missing-indicator strategies perform differently depending on whether missingness is informative [Sisk 2023]. These approaches train each model on the information it will see, or fill in what is missing before applying a model trained on complete data. A separate line of work treats a change in missingness between training and deployment sites as a form of distribution shift and adapts the model to the new site [Zhou 2023].
+
+Knowledge distillation offers a third route. A teacher model trained with full information produces soft predictions, and a student model learns to reproduce them from a reduced set of inputs [Hinton 2015]. When the teacher has access to information the student will never see, the arrangement is known as learning with privileged information, and distillation provides a principled way to transfer what the privileged features teach [Lopez-Paz 2016]. U.S. vital records suit this design: many records are complete on every item and can train a teacher, while each state's actual pattern of unknown items defines the conditions its student must work under.
+
+We evaluate missingness-aware knowledge distillation (MAKD) for predicting low birthweight and preterm birth from antenatal birth-certificate items. Because the public-use natality files carry no state identifier, we impose each state's observed item-unknown rates from CDC WONDER on national records and compare distilled students with imputation, missing-indicator and non-distilled baselines on the measures that matter when an outcome is rare: sensitivity and positive predictive value at a fixed alert rate, calibration, and subgroup performance. We also evaluate every model on real 2024 records whose items are naturally missing, the one test that does not depend on a simulated missingness mechanism. This work extends the author's earlier neonatal prediction study in Ghana [VERIFY: cite the submitted manuscript as permitted] to U.S. national data.
 
 ## 2. Methods
 
@@ -50,10 +60,26 @@ Each model was evaluated in 200,000 test-year births under each state's mask. Th
 
 **PTB, records with naturally missing items** (n = 200,000; 23,492 events; models trained under MAR masks). The pooled distilled student had AUROC 0.685 and PPV 31.6% at the 10% alert threshold. Paired bootstrap 95% intervals: versus teacher with mean imputation, AUROC difference +0.009 to +0.011 and PPV difference +0.24 to +0.63 points; versus teacher with iterative imputation, AUROC difference +0.016 to +0.018 and PPV difference +0.75 to +1.25 points; versus the same learner without distillation, AUROC difference +0.002 to +0.004 and PPV difference +0.05 to +0.43 points.
 
-Figure 1. State item missingness (2024). Figure 2. Gap to teacher in PPV and sensitivity at the 10% alert rate. Figure 3. Calibration (ICI). Figure 4. Subgroup PPV.
+![Births with each item unknown or not stated, by state (2024, CDC WONDER). Bars mark the median state.](figures/fig1_state_missingness.png)
+
+![Gap to the full-information teacher in PPV (top) and sensitivity (bottom) at the 10% alert rate, by state, outcome and missingness mechanism.](figures/fig2_gap_to_teacher.png)
+
+![Calibration: integrated calibration index across states, by model.](figures/fig3_calibration_ici.png)
+
+![PPV at the 10% alert rate by subgroup under the births-weighted state mixture (MAR masks).](figures/fig4_subgroups_ppv.png)
 
 ## 4. Discussion
-[VERIFY: author writes after reading docs/LIMITATIONS.md, which this section may not outrun.]
+*[Draft written with AI assistance from the author's results. The author must rewrite it in their own voice, check every claim against the Results and docs/LIMITATIONS.md, and verify every citation before posting.]*
+
+**Principal findings.** Two pictures emerge. On simulated state missingness at the rates states actually report, every tree-based method stayed within a fraction of a percentage point of the full-information teacher's positive predictive value; logistic regression with missing indicators trailed by more than a point. Distilled students matched or slightly exceeded the teacher for low birthweight, while a teacher combined with simple mean imputation was as good or better for preterm birth. On real 2024 records with naturally missing items, the ordering was clearer: the pooled distilled student had higher AUROC than every baseline in both outcomes, with bootstrap intervals that excluded zero. It also had higher PPV than iterative imputation in every comparison, and higher PPV than mean imputation in most.
+
+**Why the two tests disagree.** The simulated masks assume missingness that is completely at random or that depends only on observed covariates. Real unknown items on birth certificates are unlikely to behave that way: a blank prenatal-care field may itself reflect limited or late care, so missingness carries information about risk. Models trained on masked inputs with explicit missingness indicators can use that signal, whereas imputing a plausible value into a complete-data teacher discards it. This is consistent with prior arguments that the handling of missing data in prediction should preserve, rather than remove, informative missingness [Sperrin 2020; Sisk 2023]. Distillation added a small but consistent AUROC gain over the same learner trained on hard labels, in line with the view of soft targets as lower-variance supervision [Hinton 2015; Lopez-Paz 2016].
+
+**Implications.** Because real state-level item missingness is low (the median state leaves each item unknown for about one percent of births), the practical benefit of any missing-data strategy for most jurisdictions is small. Where it matters most is in the records that are incomplete, which are not a random subset of births; there, a distilled student trained to expect missing items outperformed imputation. Per-state students did not improve on a single pooled student in this analysis, which suggests a single national student trained across state missingness patterns may be sufficient.
+
+**Limitations.** State missingness was simulated from WONDER marginal rates because public-use files lack state identifiers; the joint and outcome-related structure of real state missingness is not captured, and the natural-missingness analysis is national rather than state-specific. Training used 2016, 2017 and 2023 only; 2018–2022 were unavailable for this analysis. Predictors are recorded on the certificate at or after delivery; completeness does not guarantee accuracy [Martin 2013]; and only gradient-boosted trees were studied. Subgroup results are descriptive. A full list is in the supplementary limitations file.
+
+**Conclusion.** For low birthweight and preterm birth prediction from U.S. birth certificates, missingness-aware knowledge distillation performed comparably to imputation on simulated state missingness at real rates and better than imputation on records with naturally missing items. Evaluating models on naturally incomplete records, not only on simulated masks, changed the conclusion and should be standard when deployment-time missingness is at issue.
 
 ## Declarations
 **AI assistance.** Claude (Anthropic) assisted with code scaffolding, data-wrangling scripts, document formatting, and literature triage. The author made all modeling decisions, verified every number against pipeline output, and wrote the interpretation. [VERIFY: match target journal's AI policy wording]
@@ -61,3 +87,20 @@ Figure 1. State item missingness (2024). Figure 2. Gap to teacher in PPV and sen
 **Data and code availability.** NCHS natality public-use files and CDC WONDER are publicly available; no microdata are redistributed. Code: [DOI: Zenodo, after release].
 
 **Funding / conflicts.** [VERIFY]
+
+## References
+
+*[Every reference must be opened and checked by the author; entries marked VERIFY have details not yet confirmed.]*
+
+- [Hinton 2015] Hinton G, Vinyals O, Dean J. Distilling the knowledge in a neural network. arXiv:1503.02531. 2015.
+- [Lopez-Paz 2016] Lopez-Paz D, Bottou L, Schölkopf B, Vapnik V. Unifying distillation and privileged information. International Conference on Learning Representations (ICLR). 2016.
+- [Hoogland 2020] Hoogland J, van Barreveld M, Debray TPA, et al. Handling missing predictor values when validating and applying a prediction model to new patients. Statistics in Medicine. 2020. doi:10.1002/sim.8682
+- [Sperrin 2020] Sperrin M, Martin GP, Sisk R, Peek N. Missing data should be handled differently for prediction than for description or causal explanation. Journal of Clinical Epidemiology. 2020. [VERIFY volume and pages]
+- [Sisk 2023] Sisk R, Sperrin M, Peek N, van Smeden M, Martin GP. Imputation and missing indicators for handling missing data in the development and deployment of clinical prediction models: a simulation study. Statistical Methods in Medical Research. 2023.
+- [Zhou 2023] Zhou H, Balakrishnan S, Lipton ZC. Domain adaptation under missingness shift. Proceedings of AISTATS, PMLR 206. 2023.
+- [Austin 2019] Austin PC, Steyerberg EW. The Integrated Calibration Index (ICI) and related metrics for quantifying the calibration of logistic regression models. Statistics in Medicine. 2019. [VERIFY]
+- [Martin 2013] Martin JA, Wilson EC, Osterman MJK, et al. Assessing the quality of medical and health data from the 2003 birth certificate revision: results from two states. National Vital Statistics Reports. 2013;62. [VERIFY issue]
+- [Collins 2024] Collins GS, Moons KGM, Dhiman P, et al. TRIPOD+AI statement. BMJ. 2024. [VERIFY]
+- [NCHS 2026] National Center for Health Statistics. Natality public-use data files and User Guides, 2016–2024. https://ftp.cdc.gov/pub/Health_Statistics/NCHS/
+- [WONDER 2026] Centers for Disease Control and Prevention. Natality, 2016–2024 expanded, on CDC WONDER. https://wonder.cdc.gov/natality-expanded-current.html (accessed October 7, 2026).
+- [NVSR 2025] Osterman MJK, Hamilton BE, Martin JA, et al. Births: Final Data for 2024. National Vital Statistics Reports. [VERIFY volume, number and author list]

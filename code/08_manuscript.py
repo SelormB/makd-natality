@@ -67,6 +67,31 @@ def natural_paragraph(stats):
     return "\n\n".join(out)
 
 
+def draft(name):
+    """Author-editable section text from paper/drafts/<name>.md (replace with your own)."""
+    p = ROOT / "paper" / "drafts" / f"{name}.md"
+    return p.read_text().strip() if p.exists() else f"[VERIFY: author writes the {name}]"
+
+
+def abstract_natural(stats):
+    nat = stats.get("natural", {})
+    bits = []
+    for o in ("LBW", "PTB"):
+        e = (nat.get(o) or {}).get("MAR")
+        if not e or "B1_teacher_meanimp" not in e["diffs"]:
+            continue
+        a = e["diffs"]["B1_teacher_meanimp"]["auroc"]
+        b = e["diffs"].get("B2_teacher_iterimp", {}).get("auroc")
+        s = f"{o}: AUROC difference versus mean imputation {a[0]:+.3f} to {a[1]:+.3f}"
+        if b:
+            s += f", versus iterative imputation {b[0]:+.3f} to {b[1]:+.3f}"
+        bits.append(s)
+    if not bits:
+        return ""
+    return ("On real test-year records with naturally missing items, the pooled distilled student outperformed "
+            "imputation (paired bootstrap 95% intervals; " + "; ".join(bits) + ").")
+
+
 def results_paragraphs(stats):
     out = []
     for o, od in stats["outcomes"].items():
@@ -126,6 +151,10 @@ def main():
         "natural_missing_n_test": f"{stats['natural_missing_n_test']:,}",
         "code_doi": "[DOI: Zenodo, after release]",
         "results_paragraphs": results_paragraphs(stats),
+        "abstract_natural": abstract_natural(stats),
+        "introduction": draft("introduction"),
+        "discussion": draft("discussion"),
+        "references": draft("references"),
         "stress_sentence": "".join(
             f"A stress arm ({m['name']}) multiplied every state's observed rates by {m['rate_multiplier']:g}, "
             "capped at 95%, to show behavior under much poorer completeness than any state reports. "

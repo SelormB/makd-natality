@@ -27,6 +27,7 @@ python code/06_evaluate.py        # metrics by state, bootstrap, subgroups, natu
 python code/07_figures.py         # paper/figures/
 python code/08_manuscript.py      # paper/manuscript.md from paper/stats.json
 python code/09_summary.py         # paper/summary.md: headline comparisons from the tables
+python code/10_preprint_pdf.py    # paper/MAKD-Natality_preprint_<run>.pdf (pandoc + XeLaTeX; DRAFT watermark until final)
 ```
 
 Every modeling decision is in `config.yaml`. Items marked VERIFY are provisional.
