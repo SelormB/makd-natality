@@ -129,3 +129,5 @@ ASSUMPTIONS:    Predictors and outcomes per the defaults above (author left Q2/Q
 Added: bootstrap CIs and paired differences on records with naturally missing items (`natural_missingness_bootstrap.csv`); this analysis now appears in the Results text. Training resumes from saved models after an interruption, with a separate random stream per step so resumed runs reproduce uninterrupted ones.
 
 Gap in the training years (2018–2022 missing) is a limitation of this design, not a choice; when the files arrive, the main design (`config.yaml`) supersedes it.
+
+**Available-data run completed 2026-10-07** (training ~2.5 h, evaluation ~2.7 h on 2 cores, across three workspace restarts; evaluation now checkpoints per state). Results: `paper/available/summary.md`; draft text `paper/available/manuscript.md`.

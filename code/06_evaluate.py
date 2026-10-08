@@ -219,11 +219,19 @@ def main():
             t0 = time.time()
             r_blk, b_blk, s_blk = [], [], []
             bank = Bank(cfg, outcome, mech["name"])
-            jobs = Parallel(n_jobs=ev["n_jobs"], verbose=0)(
-                delayed(eval_state)(cfg, outcome, mech, st, pat, test, tune, pT_te, pT_tu,
-                                    float(mean_rate[st]), st in boot_states)
-                for st, pat in patterns.items())
-            for r_, b_ in jobs:
+            sdir = cache / f"{outcome}_{mech['name']}_states"   # per-state checkpoints
+            sdir.mkdir(exist_ok=True)
+            todo = [st for st in patterns if not (sdir / f"{st.replace(' ', '_')}.pkl").exists()]
+
+            def _run_save(st):
+                res_ = eval_state(cfg, outcome, mech, st, patterns[st], test, tune, pT_te, pT_tu,
+                                  float(mean_rate[st]), st in boot_states)
+                pd.to_pickle(res_, sdir / f"{st.replace(' ', '_')}.pkl")
+                return 0
+
+            Parallel(n_jobs=ev["n_jobs"], verbose=0)(delayed(_run_save)(st) for st in todo)
+            for st in patterns:
+                r_, b_ = pd.read_pickle(sdir / f"{st.replace(' ', '_')}.pkl")
                 r_blk += r_
                 b_blk += b_
 
