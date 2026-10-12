@@ -18,3 +18,7 @@ paper/*/tables/_cache/
 .sync.tgz
 .sync*.tgz
 data/run_*.log
+paper/arxiv/*.aux
+paper/arxiv/*.log
+paper/arxiv/*.out
+paper/arxiv/*.blg

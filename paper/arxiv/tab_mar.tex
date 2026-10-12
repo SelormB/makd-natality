@@ -1,0 +1,25 @@
+\begin{tabular}{lrrrrrr}
+\toprule
+Model & AUROC & AUPRC (\%) & PPV (\%) & $\Delta$PPV & $\Delta$Sens. & ICI (\%)\\
+\midrule
+\multicolumn{7}{l}{\textit{Low birthweight}}\\
+\quad Teacher, full information & 0.684 & 15.6 & 18.0 & -- & -- & 0.24\\
+\quad Distilled student, per state & 0.683 & 15.5 & 18.1 & +0.10 & +0.09 & 0.23\\
+\quad Distilled student, pooled & 0.683 & 15.5 & 18.2 & +0.11 & +0.08 & 0.26\\
+\quad Non-distilled student, per state (B3) & 0.682 & 15.4 & 18.1 & +0.01 & $-$0.01 & 0.20\\
+\quad Non-distilled student, pooled (B3) & 0.682 & 15.5 & 18.1 & +0.08 & +0.05 & 0.22\\
+\quad Teacher + mean imputation (B1) & 0.683 & 15.5 & 18.0 & $-$0.03 & $-$0.01 & 0.24\\
+\quad Teacher + iterative imputation (B2) & 0.682 & 15.2 & 17.9 & $-$0.09 & $-$0.15 & 0.25\\
+\quad Logistic regression + indicators (B4) & 0.655 & 13.7 & 16.6 & $-$1.44 & $-$1.47 & 0.32\\
+\addlinespace
+\multicolumn{7}{l}{\textit{Preterm birth}}\\
+\quad Teacher, full information & 0.672 & 19.1 & 22.8 & -- & -- & 0.46\\
+\quad Distilled student, per state & 0.671 & 19.0 & 22.7 & $-$0.15 & $-$0.15 & 0.47\\
+\quad Distilled student, pooled & 0.671 & 19.0 & 22.7 & $-$0.10 & $-$0.05 & 0.47\\
+\quad Non-distilled student, per state (B3) & 0.669 & 18.8 & 22.7 & $-$0.19 & $-$0.13 & 0.44\\
+\quad Non-distilled student, pooled (B3) & 0.670 & 18.8 & 22.6 & $-$0.26 & $-$0.14 & 0.42\\
+\quad Teacher + mean imputation (B1) & 0.671 & 19.1 & 22.8 & $-$0.05 & $-$0.03 & 0.47\\
+\quad Teacher + iterative imputation (B2) & 0.670 & 18.4 & 22.7 & $-$0.11 & $-$0.18 & 0.47\\
+\quad Logistic regression + indicators (B4) & 0.644 & 17.4 & 21.4 & $-$1.44 & $-$1.70 & 0.60\\
+\bottomrule
+\end{tabular}
